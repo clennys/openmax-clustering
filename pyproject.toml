@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "openmax"
+version = "0.1.0"
+description = "Bachelor Thesis: OpenMax"
+authors = ["Dennys Huber <dennys.huber@proton.me>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytest = "^7.4.0"
+numpy = "^1.25.1"
+
+[tool.poetry.scripts]
+openmax = "openmax:start"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
