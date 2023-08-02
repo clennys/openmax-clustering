@@ -25,7 +25,7 @@
           name = "poetry-openmax";
           packages =
             # [ (mkPoetryEnv {projectDir = self;}) poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright];
-            [ poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright pkgs.marksman];
+            [ poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright pkgs.marksman pkgs.python311Packages.mdformat];
         };
         myapp.${system}.default = {
           type = "app";
