@@ -13,6 +13,7 @@
       let
         # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
         inherit (poetry2nix.legacyPackages.${system}) mkPoetryApplication;
+        inherit (poetry2nix.legacyPackages.${system}) mkPoetryEnv;
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         packages = {
@@ -23,7 +24,8 @@
         devShells.default = pkgs.mkShell {
           name = "poetry-openmax";
           packages =
-            [ poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright ];
+            # [ (mkPoetryEnv {projectDir = self;}) poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright];
+            [ poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright pkgs.marksman];
         };
         myapp.${system}.default = {
           type = "app";
