@@ -1,29 +1,33 @@
 # Openset Imagenet Flow
 
 ## Training
+
 ### Train.py
+
 Entry point for network training with openmax.
+
 ```python train.py
-    def main(command_line_options = None):
+def main(command_line_options = None):
 
-        args = get_args(command_line_options)
-        config = openset_imagenet.util.load_yaml(args.configuration)
+    args = get_args(command_line_options)
+    config = openset_imagenet.util.load_yaml(args.configuration)
 
-        if args.gpu is not None:
-            config.gpu = args.gpu
-        config.protocol = args.protocol
+    if args.gpu is not None:
+        config.gpu = args.gpu
+    config.protocol = args.protocol
 
-        if config.algorithm.type == "threshold":
-            openset_imagenet.train.worker(config)
-        elif config.algorithm.type in ['openmax', 'evm']: # ---> HERE
-            openset_imagenet.openmax_evm.worker(config)
-        elif config.algorithm.type == "proser":
-            openset_imagenet.proser.worker(config, 0)
-        else:
-            raise ValueError(f"The training configuration type '{config.algorithm.type}' is not known to the system")
+    if config.algorithm.type == "threshold":
+        openset_imagenet.train.worker(config)
+    elif config.algorithm.type in ['openmax', 'evm']: # ---> HERE
+        openset_imagenet.openmax_evm.worker(config)
+    elif config.algorithm.type == "proser":
+        openset_imagenet.proser.worker(config, 0)
+    else:
+        raise ValueError(f"The training configuration type '{config.algorithm.type}' is not known to the system")
 ```
 
 ### Openmax_evm.py
+
 ```python openmax_evm.py
 def worker(cfg):
     """ Main worker creates all required instances, trains and validates the model.
@@ -69,8 +73,10 @@ def worker(cfg):
     save_models(all_hyper_param_models, pos_classes, cfg)
     logger.info(f'{cfg.algorithm.type} Training Finished')
 ```
+
 1. Get hyperparams
-    - Why and what is NameSpace?
+   - Why and what is NameSpace?
+
 ```python
 def openmax_hyperparams(tailsize, dist_mult, translate_amount, dist_metric, alpha):
 
@@ -78,10 +84,12 @@ def openmax_hyperparams(tailsize, dist_mult, translate_amount, dist_metric, alph
         tailsize=tailsize, distance_multiplier=dist_mult, distance_metric=dist_metric, alpha=alpha
     ))
 ```
+
 2. Exract Arrays for the training data
 3. Load onto tensor
 4. Postprocess the train data
-```python 
+
+```python
 def postprocess_train_data(targets, features, logits):
     # Note: OpenMax uses only the training samples that get correctly classified by the
           # underlying, extracting DNN to train its model.logger.debug('\n')
@@ -107,19 +115,22 @@ def postprocess_train_data(targets, features, logits):
 
         return targets_kkc[correct_idxs], features_kkc[correct_idxs], logits_kkc[correct_idxs]
 ```
+
 5. Collect the position of classes
-```python 
+
+```python
 def collect_pos_classes(targets):
     targets_unique = torch.unique(targets, sorted=True)
     pos_classes = targets_unique[targets_unique >= 0].numpy().astype(np.int32).tolist()
     return pos_classes
 ```
-6. Get Training function
-EVT Meta-Recognition Calibration for Open Set Deep Networks, with per class Weibull fit to $\nrleg$ largest distance to mean activation vector.
-Returns libMR models $ρ_j$ which includes parameters $\tau_i$ for shifting the data as well as the Weibull shape and scale parameters:$\kappa_i, \lambda_i$.
-![Algo1](./images/algo1_calib.png)
 
-```python 
+6. Get Training function
+   EVT Meta-Recognition Calibration for Open Set Deep Networks, with per class Weibull fit to $\\nrleg$ largest distance to mean activation vector.
+   Returns libMR models $ρ_j$ which includes parameters $\\tau_i$ for shifting the data as well as the Weibull shape and scale parameters:$\\kappa_i, \\lambda_i$.
+   ![Algo1](/openmax/notes/images/algo1_calib.png?raw=true "Openmax calibration algorithm")
+
+```python
 def OpenMax_Training(
     pos_classes_to_process: List[str],
     features_all_classes: Dict[str, torch.Tensor],
@@ -155,5 +166,6 @@ def OpenMax_Training(
                 (pos_cls_name, dict(MAV=MAV.cpu()[None, :], weibulls=weibull_model)),
             )
 ```
+
 7. Perform training on all data and combinations
 8. Save Model (.pth)
