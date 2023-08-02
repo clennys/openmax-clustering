@@ -128,7 +128,7 @@ def collect_pos_classes(targets):
 6. Get Training function
    EVT Meta-Recognition Calibration for Open Set Deep Networks, with per class Weibull fit to $\\nrleg$ largest distance to mean activation vector.
    Returns libMR models $ρ_j$ which includes parameters $\\tau_i$ for shifting the data as well as the Weibull shape and scale parameters:$\\kappa_i, \\lambda_i$.
-   ![Algo1](/notes/images/algo1_calib.png?raw=true "Openmax calibration algorithm")
+   ![Algo1](https://github.com/devnnys/openmax/blob/main/notes/images/algo1_calib.png?raw=true "Openmax calibration algorithm")
 
 ```python
 def OpenMax_Training(
