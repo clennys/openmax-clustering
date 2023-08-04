@@ -23,10 +23,20 @@
 
         devShells.default = pkgs.mkShell {
           name = "poetry-openmax";
+          # LD_LIBRARY_PATH = "${nixpkgs.stdenv.cc.cc.lib}/lib";
           packages =
             # [ (mkPoetryEnv {projectDir = self;}) poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright];
-            [ poetry2nix.packages.${system}.poetry pkgs.black pkgs.pyright pkgs.marksman pkgs.python311Packages.mdformat];
+            [
+              poetry2nix.packages.${system}.poetry
+              pkgs.black
+              pkgs.pyright
+              pkgs.stdenv.cc.cc.lib
+              pkgs.python310Packages.numpy
+              pkgs.python310Packages.scikit-learn-extra
+			  pkgs.python310Packages.mypy
+            ];
         };
+
         myapp.${system}.default = {
           type = "app";
           program = "${self.packages.${system}.myapp}";
