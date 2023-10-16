@@ -16,6 +16,10 @@ def train(
         model.load_state_dict(torch.load(path_model))
         print(f"Loaded: {path_model}")
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    model = model.to(device)  # Move model to GPU
+
     features_dict = {}
 
     model.train()
@@ -26,6 +30,8 @@ def train(
 
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Epoch [{epoch+1}/{num_epochs}]")
+
+                batch_inputs, batch_labels = batch_inputs.to(device), batch_labels.to(device)
 
                 optimizer.zero_grad()
                 training_predictions, _, training_features = model(batch_inputs)
