@@ -1,0 +1,23 @@
+name: openset-imagenet-comparison
+channels:
+  - defaults
+dependencies:
+  - cudatoolkit[version='>=11']
+  - matplotlib[version='>=3.5.2']
+  - tensorboard
+  - loguru[version='>=0.6.0']
+  - pip
+  - pytorch[version='>=1.11.0']
+  - pyyaml
+  - torchvision[version='>=0.12.0']
+  - python=3.8
+  - tqdm[version='>=4.64.0']
+  - numpy[version='>=1.22.3']
+  - pandas[version='>=1.4.3']
+  - scikit-learn[version='>=1.1.1']
+  - ipykernel
+  - jupyterlab-lsp
+  - black
+  - hdbscan
+  - kneed
+prefix: /home/dhuber/.conda/envs/openset-imagenet-comparison
