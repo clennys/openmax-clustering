@@ -5,9 +5,11 @@ import numpy as np
 import clustering as cl
 from loguru import logger
 
+
 def transpose(x):
     """Used for correcting rotation of EMNIST Letters"""
     return x.transpose(2, 1)
+
 
 class EMNIST(torch.utils.data.dataset.Dataset):
     """A split dataset for our experiments. It uses MNIST as known samples and EMNIST letters as unknowns.
@@ -26,7 +28,6 @@ class EMNIST(torch.utils.data.dataset.Dataset):
 
     has_garbage_class: Set this to True when training softmax with background class. This way, unknown samples will get class label 10. If False (the default), unknown samples will get label -1.
     """
-
 
     def __init__(
         self,
@@ -68,7 +69,6 @@ class EMNIST(torch.utils.data.dataset.Dataset):
 
         if use_clusters:
             self.clustering()
-        
 
     def __getitem__(self, index):
         if index < len(self.mnist):
@@ -91,7 +91,9 @@ class EMNIST(torch.utils.data.dataset.Dataset):
         for i in range(len(cluster_data)):
             label = cluster_targets[i]
             if label in cluster_data_dict.keys():
-                cluster_data_dict[label] = np.vstack([cluster_data_dict[label], cluster_data_reshaped[i]])
+                cluster_data_dict[label] = np.vstack(
+                    [cluster_data_dict[label], cluster_data_reshaped[i]]
+                )
             else:
                 cluster_data_dict[label] = cluster_data_reshaped[i]
 
@@ -100,7 +102,9 @@ class EMNIST(torch.utils.data.dataset.Dataset):
         metric = "euclidean"
         clusterer_dict = {}
         for key in cluster_data_dict.keys():
-            clusterer = cl.agglo_clustering(n_clusters, linkage, metric, cluster_data_dict[key])
+            clusterer = cl.agglo_clustering(
+                n_clusters, linkage, metric, cluster_data_dict[key]
+            )
             clusterer_dict[key] = clusterer
 
         targets_ = np.array([], dtype=np.uint8)

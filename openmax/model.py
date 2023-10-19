@@ -1,4 +1,6 @@
 import torch.nn as nn
+from loguru import logger
+
 
 class LeNet(nn.Module):
     def __init__(
@@ -34,7 +36,7 @@ class LeNet(nn.Module):
                 )
         self.relu_act = nn.ReLU()
         self.use_classification_layer = use_classification_layer
-        print(
+        logger.info(
             f"{' Model Architecture '.center(90, '#')}\n{self}\n{' Model Architecture End '.center(90, '#')}"
         )
 
