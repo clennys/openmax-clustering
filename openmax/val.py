@@ -3,6 +3,7 @@ import os
 from tqdm import tqdm
 from loguru import logger
 
+
 def validation(model, val_data_loader, validation_data, loss_fn, path_model=""):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model))
@@ -20,7 +21,7 @@ def validation(model, val_data_loader, validation_data, loss_fn, path_model=""):
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Validation")
 
-                val_predictions, val_logits, val_features = model(batch_inputs, batch_labels)
+                val_predictions, val_logits, val_features = model(batch_inputs)
 
                 _, val_predicted = torch.max(val_predictions, 1)
                 for pred, label, logits, features in zip(
@@ -51,7 +52,15 @@ def validation(model, val_data_loader, validation_data, loss_fn, path_model=""):
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict
 
-def validation_cluster(model, val_data_loader, validation_data, loss_fn, num_cluster_per_class=1,path_model=""):
+
+def validation_cluster(
+    model,
+    val_data_loader,
+    validation_data,
+    loss_fn,
+    num_cluster_per_class=1,
+    path_model="",
+):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model))
         logger.info(f"Loaded: {path_model}")
@@ -68,7 +77,7 @@ def validation_cluster(model, val_data_loader, validation_data, loss_fn, num_clu
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Validation")
 
-                val_predictions, val_logits, val_features = model(batch_inputs, batch_labels)
+                val_predictions, val_logits, val_features = model(batch_inputs)
 
                 _, val_predicted = torch.max(val_predictions, 1)
                 for pred, label, logits, features in zip(
@@ -85,9 +94,12 @@ def validation_cluster(model, val_data_loader, validation_data, loss_fn, num_clu
                         val_features_dict[label.item()] = features[None, :]
                         val_logits_dict[label.item()] = logits[None, :]
 
-
                 logger.debug(f"PRE val_predicted: {val_predicted}")
-                val_predicted = torch.where(val_predicted != -1, val_predicted.int()//num_cluster_per_class, val_predicted)
+                val_predicted = torch.where(
+                    val_predicted != -1,
+                    val_predicted.int() // num_cluster_per_class,
+                    val_predicted,
+                )
                 logger.debug(f"POST val_predicted: {val_predicted}")
                 correct_predictions += (val_predicted == batch_labels).sum().item()
                 logger.debug(f"Batch_labels : {batch_labels}")

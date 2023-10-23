@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
+
 def preprocess_oscr(class_scores_dict: dict):
     all_probs_per_model = []
     gt = []
@@ -53,41 +54,53 @@ def calculate_oscr(gt, scores, unk_label=-1):
     fpr = np.array(fpr)
     return ccr, fpr
 
+
 def clusters_to_class(clusters_dict, num_clusters_per_class):
     condensed_cluster_to_class = {}
     for key in clusters_dict.keys():
-        if (key//num_clusters_per_class) in condensed_cluster_to_class and key != -1:
-            condensed_cluster_to_class[key//num_clusters_per_class] = torch.cat((condensed_cluster_to_class[key//num_clusters_per_class], clusters_dict[key])) 
+        if (key // num_clusters_per_class) in condensed_cluster_to_class and key != -1:
+            condensed_cluster_to_class[key // num_clusters_per_class] = torch.cat(
+                (
+                    condensed_cluster_to_class[key // num_clusters_per_class],
+                    clusters_dict[key],
+                )
+            )
         elif key == -1:
             condensed_cluster_to_class[key] = clusters_dict[key]
         else:
-            condensed_cluster_to_class[key//num_clusters_per_class] = clusters_dict[key]
+            condensed_cluster_to_class[key // num_clusters_per_class] = clusters_dict[
+                key
+            ]
     return condensed_cluster_to_class
 
 
-
 def known_unknown_acc(openmax_predictions_per_model, num_clusters_per_class=1):
-   for key in openmax_predictions_per_model.keys():
-    print(f" ======= {key} ====== ") 
-    knowns_acc = [0,0]
-    unknown_acc = [0,0]
-    condensed_cluster_to_class = {}
-    if num_clusters_per_class > 1:
-        condensed_cluster_to_class = clusters_to_class(openmax_predictions_per_model[key], num_clusters_per_class)
-    else:
+    for key in openmax_predictions_per_model:
+        print(f" ======= {key} ====== ")
+        knowns_acc = [0, 0]
+        unknown_acc = [0, 0]
+        condensed_cluster_to_class = {}
+        # if num_clusters_per_class > 100:
+        #     condensed_cluster_to_class = clusters_to_class(
+        #         openmax_predictions_per_model[key], num_clusters_per_class
+        #     )
+        # else:
         condensed_cluster_to_class = openmax_predictions_per_model[key]
-    for label in condensed_cluster_to_class.keys():
-        label_tensor = condensed_cluster_to_class[label]
-        counts = torch.sum(label_tensor.eq(label))
-        total = label_tensor.size(dim=0)
-        if label != -1: 
-            knowns_acc[0] += int(counts.item())
-            knowns_acc[1] += total
-        else:
-            unknown_acc[0] = int(counts.item())
-            unknown_acc[1] = total
-        print(f"Acc per label {label}: {counts} / {total}")
-    print(f"\nKnown: {knowns_acc[0]/knowns_acc[1]:.3f}, Unknown {unknown_acc[0]/unknown_acc[1]:.3f} \n")
+        for label in sorted(condensed_cluster_to_class):
+            label_tensor = condensed_cluster_to_class[label]
+            counts = torch.sum(label_tensor.eq(label))
+            total = label_tensor.size(dim=0)
+            if label != -1:
+                knowns_acc[0] += int(counts.item())
+                knowns_acc[1] += total
+            else:
+                unknown_acc[0] = int(counts.item())
+                unknown_acc[1] = total
+            print(f"Acc per label {label}: {counts} / {total}")
+        print(
+            f"\nKnown: {knowns_acc[0]/knowns_acc[1]:.3f}, Unknown {unknown_acc[0]/unknown_acc[1]:.3f} \n"
+        )
+
 
 def ccr_fpr_plot(ccr_fpr_per_model):
     fig, axs = plt.subplots(1, 1)
@@ -95,7 +108,3 @@ def ccr_fpr_plot(ccr_fpr_per_model):
         axs.plot(ccr_fpr_per_model[key][1], ccr_fpr_per_model[key][0], label=key)
     plt.legend(loc="lower right")
     plt.show()
-
-
-
-

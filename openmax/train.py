@@ -12,7 +12,7 @@ def train(
     loss_fn,
     num_epochs,
     path_model="",
-    cluster_per_class=1
+    cluster_per_class=1,
 ):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model))
@@ -39,7 +39,9 @@ def train(
                 )
 
                 optimizer.zero_grad()
-                training_predictions, _, training_features = model(batch_inputs, batch_labels)
+                training_predictions, _, training_features = model(
+                    batch_inputs
+                )
 
                 if epoch == num_epochs - 1:
                     _, training_pred = torch.max(training_predictions, 1)
@@ -64,7 +66,18 @@ def train(
 
                 _, predicted = torch.max(training_predictions, 1)
                 correct_predictions += (predicted == batch_labels).sum().item()
-                correct_predictions_cluster += (predicted//cluster_per_class == batch_labels//cluster_per_class).sum().item()
+                non_cluster_predicted = torch.div(predicted, 3, rounding_mode='floor').int()
+                non_cluster_batch_labels = torch.div(batch_labels, 3, rounding_mode='floor').int()
+                correct_predictions_cluster += (
+                    (
+                        non_cluster_predicted
+                        == non_cluster_batch_labels
+                    )
+                    .sum()
+                    .item()
+                )
+                logger.debug(f"TRAIN PRE: Pred: {predicted}, Batch: {batch_labels}")
+                logger.debug(f"TRAIN POST: Pred: {non_cluster_predicted}, Batch: {non_cluster_batch_labels}")
 
                 curr_acc = correct_predictions / len(training_data)
                 tepoch.set_postfix(loss=loss.item(), acc=curr_acc)
@@ -72,7 +85,9 @@ def train(
             accuracy = correct_predictions / len(training_data)
             accuracy_cluster = correct_predictions_cluster / len(training_data)
             avg_loss = total_loss / len(train_data_loader)
-            logger.info(f"Average loss: {avg_loss:.3f} - Accuracy w/ cluster: {accuracy:.3f} - Accuray w\ cluster: {accuracy_cluster:.3f}")
+            logger.info(
+                f"Average loss: {avg_loss:.3f} - Accuracy w/ cluster: {accuracy:.3f} - Accuray w\ cluster: {accuracy_cluster:.3f}"
+            )
 
     # Save the trained model
     torch.save(model.state_dict(), path_model)

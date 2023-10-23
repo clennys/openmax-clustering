@@ -37,34 +37,37 @@ def openmax_run(
     training_features_dict: dict,
     val_features_dict: dict,
     val_logits_dict: dict,
-    alpha:int,
-    cluster_per_class = 1
+    alpha: int,
+    cluster_per_class=1,
 ):
     models_dict = {}
     for tail in tail_sizes:
         for dist_mult in distance_multpls:
             model_ = openmax_training(training_features_dict, dist_mult, tail)
             if cluster_per_class > 1:
-                for label in range(10*cluster_per_class):
+                for label in range(10 * cluster_per_class):
                     if label not in model_:
-                        for replace in range(label//cluster_per_class * cluster_per_class, label//cluster_per_class  * cluster_per_class+ cluster_per_class):
+                        for replace in range(
+                            label // cluster_per_class * cluster_per_class,
+                            label // cluster_per_class * cluster_per_class
+                            + cluster_per_class,
+                        ):
                             try:
                                 model_[label] = model_[replace]
-                            except: 
+                            except:
                                 continue
                             break
 
             key = f"{tail}-{dist_mult}"
             models_dict[key] = model_
-    # logger.debug(f"After Openmax training models_dict: {models_dict}")
+    logger.debug(f"After Openmax training models_dict: {models_dict}")
 
     models_props_dict = {}
     for key in models_dict.keys():
         props_dict: dict = openmax_inference(val_features_dict, models_dict[key])
         models_props_dict[key] = props_dict
 
-    # logger.debug(f"After Openmax inference models_prob_dict: {models_props_dict}")
-
+    logger.debug(f"After Openmax inference models_prob_dict: {models_props_dict}")
 
     openmax_models_scores = {}
     openmax_models_predictions = {}
@@ -90,9 +93,9 @@ def openmax_run(
         openmax_models_scores[model_idx] = openmax_scores_dict
         openmax_models_predictions[model_idx] = openmax_predictions_dict
 
-    # logger.debug(
-    #     f"Openmax training: {models_dict}, Openmax inference {models_props_dict}, openmax_alpha {openmax_models_scores}"
-    # )
+    logger.debug(
+        f"Openmax training: {models_dict}, Openmax inference {models_props_dict}, openmax_alpha {openmax_models_scores}"
+    )
     return (
         models_dict,
         models_props_dict,
@@ -158,29 +161,29 @@ def openmax_alpha(
 
     # Line 1: Sort for highest activation value
     sorted_activations, indices = torch.sort(activations, descending=True, dim=1)
-    # logger.debug(
-    #     f"Line [1]: activ: {activations.shape}, sorted_actv: {sorted_activations.shape} indices: {indices.shape}"
-    # )
+    logger.debug(
+        f"Line [1]: activ: {activations.shape}, sorted_actv: {sorted_activations.shape} indices: {indices.shape}"
+    )
 
     # Create weights of ones in correct shape
     weights = torch.ones(activations.shape[0], activations.shape[1])
 
-    # logger.debug(f"LINE [1]: weights: {weights}")
+    logger.debug(f"LINE [1]: weights: {weights}")
 
     # Line 2-4
     # Creating a sequence of integers from 1 to alpha (inclusive) with a stepsize 1
     # Sequence is assigned to the first alpha columns of all rows in weights
     weights[:, :alpha] = torch.arange(1, alpha + 1, step=1)
-    # logger.debug(f"LINE [2-4]a: weights: {weights}")
+    logger.debug(f"LINE [2-4]a: weights: {weights}")
 
     # Subtracts the current value in these position alhpa and then divides the result by alpha (elementwise)
     weights[:, :alpha] = (alpha - weights[:, :alpha]) / alpha
-    # logger.debug(f"LINE [2-4]b: weights: {weights}")
+    logger.debug(f"LINE [2-4]b: weights: {weights}")
 
     weights[:, :alpha] = 1 - weights[:, :alpha] * torch.gather(
         per_class_unknownness_prob, 1, indices[:, :alpha]
     )
-    # logger.debug(f"LINE [2-4]c: weights: {weights}")
+    logger.debug(f"LINE [2-4]c: weights: {weights}")
 
     if negative_fix == "VALUE_SHIFT":
         assert not torch.any(
@@ -201,27 +204,27 @@ def openmax_alpha(
     # Line 5
     if negative_fix == "ABS_REV_ACTV":
         revisted_activations = multiply_tensors_with_sign(sorted_activations, weights)
-        # logger.debug(f"LINE [5] ABS_REV_ACTV: {revisted_activations}")
+        logger.debug(f"LINE [5] ABS_REV_ACTV: {revisted_activations}")
     else:
         revisted_activations = sorted_activations * weights
-        # logger.debug(f"LINE [5] ORIGINAL: {revisted_activations}")
+        logger.debug(f"LINE [5] ORIGINAL: {revisted_activations}")
 
     # Line 6
     unknowness_class_prob = torch.sum(sorted_activations * (1 - weights), dim=1)
     revisted_activations = torch.scatter(
         torch.ones(revisted_activations.shape), 1, indices, revisted_activations
     )
-    # logger.debug(f"LINE [6]a: unknowness class p: {unknowness_class_prob}")
-    # logger.debug(f"LINE [6]b: revisted_act: {revisted_activations}")
+    logger.debug(f"LINE [6]a: unknowness class p: {unknowness_class_prob}")
+    logger.debug(f"LINE [6]b: revisted_act: {revisted_activations}")
 
     probability_vector = torch.cat(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
     )
-    # logger.debug(f"LINE [6]c: prob vec: {probability_vector}")
+    logger.debug(f"LINE [6]c: prob vec: {probability_vector}")
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)
-    # logger.debug(f"LINE [7]: softmax prob vec: {probability_vector}")
+    logger.debug(f"LINE [7]: softmax prob vec: {probability_vector}")
 
     if ignore_unknown_class:
         probs_kkc = probability_vector[:, 1:].clone().detach()
@@ -230,7 +233,7 @@ def openmax_alpha(
 
     # Line 8
     prediction_score, predicted_class = torch.max(probability_vector, dim=1)
-    # logger.debug(f"LINE [8]a: prediction_score: prediction_score")
+    logger.debug(f"LINE [8]a: prediction_score: prediction_score")
 
     # Line 9
     prediction_score[predicted_class == 0] = -1.0
