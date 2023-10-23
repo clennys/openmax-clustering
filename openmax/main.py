@@ -15,7 +15,7 @@ import torchvision.models as models
 
 def init_logger():
     logger.remove()
-    logger.add("../logs/debug_log_{time}.log", level="DEBUG")
+    logger.add("./logs/debug_log_{time}.log", level="DEBUG")
     logger.add(sys.stderr, level="INFO")
 
 
@@ -25,19 +25,19 @@ def baseline_model():
     logger.info(f"Using Baseline model with {BATCH_SIZE}")
 
     training_data = EMNIST(
-        dataset_root="../downloads/",
+        dataset_root="./downloads/",
         which_set="train",
         include_unknown=False,
         has_garbage_class=False,
     )
     validation_data = EMNIST(
-        dataset_root="../downloads/",
+        dataset_root="./downloads/",
         which_set="val",
         include_unknown=True,
         has_garbage_class=False,
     )
     test_data = EMNIST(
-        dataset_root="../downloads/",
+        dataset_root="./downloads/",
         which_set="test",
         include_unknown=False,
         has_garbage_class=False,
@@ -65,7 +65,7 @@ def baseline_model():
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 
-    path_model = "../saved_models/openmax_cnn_eminst0.pth"
+    path_model = "./saved_models/openmax_cnn_eminst0.pth"
 
     training_features_dict = train(
         model, training_data, train_data_loader, optimizer, loss_fn, EPOCHS, path_model
@@ -87,6 +87,7 @@ def baseline_model():
         training_features_dict,
         val_features_dict,
         val_logits_dict,
+        alpha=8
     )
 
     known_unknown_acc(openmax_predictions_per_model)
@@ -105,13 +106,13 @@ def baseline_model():
             processed_oscr_openmax_scores_per_model[model_key][1],
         )
 
-    ccr_fpr_plot(ccr_fpr_per_model)
+    # ccr_fpr_plot(ccr_fpr_per_model)
 
  
 def cluster_model():
     BATCH_SIZE = 32
-    EPOCHS = 10
-    CLUSTERS_PER_CLASS = 2
+    EPOCHS = 1
+    CLUSTERS_PER_CLASS = 3
 
     logger.info(f"Using Cluster model with {BATCH_SIZE}")
 
@@ -125,10 +126,12 @@ def cluster_model():
     )
 
     cluster_validation_data = EMNIST(
-            dataset_root="./downloads/",
-            which_set="val",
-            include_unknown=True,
-            has_garbage_class=False,
+        dataset_root="./downloads/",
+        which_set="val",
+        include_unknown=True,
+        has_garbage_class=False,
+        use_clusters=True,
+        num_clusters_per_class=CLUSTERS_PER_CLASS,
         )
 
     cluster_train_data_loader = torch.utils.data.DataLoader(
@@ -143,16 +146,14 @@ def cluster_model():
         cluster_validation_data, batch_size=BATCH_SIZE, pin_memory=True
     )
 
-    # cluster_model = LeNet(
-    #     use_classification_layer=True,
-    #     use_BG=False,
-    #     num_classes=10 * CLUSTERS_PER_CLASS,
-    #     final_layer_bias=True,
-    # )
-
-    cluster_model = models.resnet50(pretrained=True)
-    cluster_model.fc = nn.Linear(cluster_model.fc.in_features, 10*CLUSTERS_PER_CLASS)
-
+    cluster_model = LeNet(
+        use_classification_layer=True,
+        use_BG=False,
+        num_classes=10 * CLUSTERS_PER_CLASS,
+        final_layer_bias=True,
+        use_cluster=False,
+        num_clusters=CLUSTERS_PER_CLASS
+    )
 
     learning_rate = 0.01
     loss_fn = nn.CrossEntropyLoss()
@@ -160,9 +161,9 @@ def cluster_model():
         cluster_model.parameters(), lr=learning_rate, momentum=0.9
     )
 
-    path_model = f"./saved_models/openmax_cnn_eminst_cluster-{CLUSTERS_PER_CLASS*10}-resnet.pth"
+    path_model = f"./saved_models/openmax_cnn_eminst_cluster-{CLUSTERS_PER_CLASS*10}.pth"
 
-    training_features_dict = resnet_train(
+    training_features_dict = train(
         cluster_model,
         cluster_training_dataset,
         cluster_train_data_loader,
@@ -172,8 +173,14 @@ def cluster_model():
         path_model,
     )
 
+    # for label in range(10*CLUSTERS_PER_CLASS):
+    #     if label not in training_features_dict:
+    #         # training_features_dict[label] = torch.full((1, 500), float('inf')) 
+    #         training_features_dict[label] = torch.full((1, 500), 0.) 
+
+
     val_features_dict, val_logits_dict = validation_cluster(
-        cluster_model, cluster_val_data_loader, cluster_validation_data, loss_fn, path_model
+        cluster_model, cluster_val_data_loader, cluster_validation_data, loss_fn, CLUSTERS_PER_CLASS, path_model
     )
     tail_sizes = [10, 100, 250, 500, 750, 1000]
     logger.info(f"openmax: tail_sizes {tail_sizes}")
@@ -187,12 +194,11 @@ def cluster_model():
         training_features_dict,
         val_features_dict,
         val_logits_dict,
+        alpha=10,
+        cluster_per_class=CLUSTERS_PER_CLASS,
     )
 
-
-
     known_unknown_acc(openmax_predictions_per_model, CLUSTERS_PER_CLASS)
-
  
     processed_oscr_openmax_scores_per_model: dict = {}
     for model_key in openmax_scores_per_model.keys():
@@ -207,7 +213,7 @@ def cluster_model():
             processed_oscr_openmax_scores_per_model[model_key][1],
         )
 
-    ccr_fpr_plot(ccr_fpr_per_model)
+    # ccr_fpr_plot(ccr_fpr_per_model)
 
 if __name__ == "__main__":
     init_logger()

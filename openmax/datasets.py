@@ -1,3 +1,4 @@
+from collections import Counter
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -119,6 +120,7 @@ class EMNIST(torch.utils.data.dataset.Dataset):
             img_reshaped = cluster_data_dict[key].reshape(6000, 28, 28)
             reshaped_matrices.append(img_reshaped)
         data_ = np.array(np.concatenate(reshaped_matrices))
+        logger.info(Counter(targets_))
 
         self.mnist.data = torch.tensor(data_)
         self.mnist.targets = targets_

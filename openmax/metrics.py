@@ -56,7 +56,12 @@ def calculate_oscr(gt, scores, unk_label=-1):
 def clusters_to_class(clusters_dict, num_clusters_per_class):
     condensed_cluster_to_class = {}
     for key in clusters_dict.keys():
-        condensed_cluster_to_class[key//num_clusters_per_class] = torch.cat((condensed_cluster_to_class[key//num_clusters_per_class], clusters_dict[key]), 0) 
+        if (key//num_clusters_per_class) in condensed_cluster_to_class and key != -1:
+            condensed_cluster_to_class[key//num_clusters_per_class] = torch.cat((condensed_cluster_to_class[key//num_clusters_per_class], clusters_dict[key])) 
+        elif key == -1:
+            condensed_cluster_to_class[key] = clusters_dict[key]
+        else:
+            condensed_cluster_to_class[key//num_clusters_per_class] = clusters_dict[key]
     return condensed_cluster_to_class
 
 
