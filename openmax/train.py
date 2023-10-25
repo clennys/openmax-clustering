@@ -14,11 +14,12 @@ def train(
     path_model="",
     cluster_per_class=1,
 ):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     if os.path.isfile(path_model):
-        model.load_state_dict(torch.load(path_model))
+        model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = model.to(device)  # Move model to GPU
 

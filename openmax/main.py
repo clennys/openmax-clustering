@@ -129,6 +129,7 @@ def cluster_model(num_clusters_per_class, epochs, train_only):
     BATCH_SIZE = 32
     EPOCHS = epochs if epochs is not None else 1
     CLUSTERS_PER_CLASS = num_clusters_per_class
+    TOTAL_NUM_CLUSTERS = num_clusters_per_class * 10
 
     logger.info(f"Using Cluster model with {BATCH_SIZE}")
 
@@ -165,7 +166,7 @@ def cluster_model(num_clusters_per_class, epochs, train_only):
     cluster_model = LeNet(
         use_classification_layer=True,
         use_BG=False,
-        num_classes=10 * CLUSTERS_PER_CLASS,
+        num_classes=TOTAL_NUM_CLUSTERS,
         final_layer_bias=True,
     )
 
@@ -176,7 +177,7 @@ def cluster_model(num_clusters_per_class, epochs, train_only):
     )
 
     path_model = (
-        f"./saved_models/openmax_cnn_eminst_cluster-{CLUSTERS_PER_CLASS*10}.pth"
+        f"./saved_models/openmax_cnn_eminst_cluster-{TOTAL_NUM_CLUSTERS}.pth"
     )
 
     training_features_dict = train(
@@ -188,11 +189,6 @@ def cluster_model(num_clusters_per_class, epochs, train_only):
         EPOCHS,
         path_model,
     )
-
-    # for label in range(10*CLUSTERS_PER_CLASS):
-    #     if label not in training_features_dict:
-    #         # training_features_dict[label] = torch.full((1, 500), float('inf'))
-    #         training_features_dict[label] = torch.full((1, 500), 0.)
 
     if not train_only:
         val_features_dict, val_logits_dict = validation_cluster(
@@ -216,7 +212,7 @@ def cluster_model(num_clusters_per_class, epochs, train_only):
             val_features_dict,
             val_logits_dict,
             alpha=10,
-            cluster_per_class=CLUSTERS_PER_CLASS,
+            total_num_clusters=TOTAL_NUM_CLUSTERS,
         )
 
         known_unknown_acc(openmax_predictions_per_model, CLUSTERS_PER_CLASS)

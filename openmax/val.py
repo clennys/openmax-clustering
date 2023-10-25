@@ -61,9 +61,15 @@ def validation_cluster(
     num_cluster_per_class=1,
     path_model="",
 ):
+
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if os.path.isfile(path_model):
-        model.load_state_dict(torch.load(path_model))
+        model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
+
+    
+    model = model.to(device)  # Move model to GPU
 
     val_logits_dict = {}
     val_features_dict = {}
@@ -76,6 +82,8 @@ def validation_cluster(
 
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Validation")
+
+                batch_inputs, batch_labels = batch_inputs.to(device), batch_labels.to(device)
 
                 val_predictions, val_logits, val_features = model(batch_inputs)
 

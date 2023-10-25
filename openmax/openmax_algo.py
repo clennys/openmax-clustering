@@ -38,33 +38,21 @@ def openmax_run(
     val_features_dict: dict,
     val_logits_dict: dict,
     alpha: int,
-    cluster_per_class=1,
+    total_num_clusters=10,
 ):
     models_dict = {}
     for tail in tail_sizes:
         for dist_mult in distance_multpls:
             model_ = openmax_training(training_features_dict, dist_mult, tail)
-            if cluster_per_class > 1:
-                for label in range(10 * cluster_per_class):
-                    if label not in model_:
-                        for replace in range(
-                            label // cluster_per_class * cluster_per_class,
-                            label // cluster_per_class * cluster_per_class
-                            + cluster_per_class,
-                        ):
-                            try:
-                                model_[label] = model_[replace]
-                            except:
-                                continue
-                            break
-
             key = f"{tail}-{dist_mult}"
             models_dict[key] = model_
     logger.debug(f"After Openmax training models_dict: {models_dict}")
 
+
+
     models_props_dict = {}
     for key in models_dict.keys():
-        props_dict: dict = openmax_inference(val_features_dict, models_dict[key])
+        props_dict: dict = openmax_inference(val_features_dict, models_dict[key], total_num_clusters)
         models_props_dict[key] = props_dict
 
     logger.debug(f"After Openmax inference models_prob_dict: {models_props_dict}")
@@ -132,17 +120,23 @@ def openmax_training(
     return model_
 
 
-def openmax_inference(features_all_classes: dict, model_) -> dict:  # dict[str, Tensor],
+def openmax_inference(features_all_classes: dict, model_, total_num_clusters) -> dict:  # dict[str, Tensor],
     props_dict: dict = {}
-    for class_label in features_all_classes:
+    for class_label in features_all_classes: # TODO: All classes with or without clusters?
         features = features_all_classes[class_label]
         probs = []
-        for model_label in sorted(model_.keys()):
-            mav: Tensor = model_[model_label]["mav"]
-            distances: Tensor = cosine_pairwisedistance(features, mav)
-            probs.append(
-                model_[model_label]["weibull"].wscore(distances, isReversed=True)
-            )  # TODO: Reversed? 1 - weibull.cdf
+        # for model_label in sorted(model_.keys()):
+        for model_label in range(total_num_clusters):
+            if model_label in model_:
+                mav: Tensor = model_[model_label]["mav"]
+                distances: Tensor = cosine_pairwisedistance(features, mav)
+                probs.append(
+                    model_[model_label]["weibull"].wscore(distances, isReversed=True)
+                )  # TODO: Reversed? 1 - weibull.cdf
+            elif class_label == -1:
+                probs.append(torch.zeros(8800, 1))
+            else:
+                probs.append(torch.zeros(1000, 1))
         probs = torch.cat(probs, dim=1)
         props_dict[class_label] = probs
 

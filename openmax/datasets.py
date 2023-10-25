@@ -99,13 +99,15 @@ class EMNIST(torch.utils.data.dataset.Dataset):
                 cluster_data_dict[label] = cluster_data_reshaped[i]
 
         n_clusters = self.num_clusters_per_class
-        linkage = "ward"
-        metric = "euclidean"
+        linkage = "complete"
+        metric = "cosine"
         clusterer_dict = {}
         for key in cluster_data_dict.keys():
             clusterer = cl.agglo_clustering(
                 n_clusters, linkage, metric, cluster_data_dict[key]
             )
+            # size = len(cluster_data_dict[key])/n_clusters
+            # clusterer = cl.kmeans_constrained(n_clusters, np.floor(size).astype('int'), np.ceil(size).astype('int'), cluster_data_dict[key])
             clusterer_dict[key] = clusterer
 
         targets_ = np.array([], dtype=np.uint8)

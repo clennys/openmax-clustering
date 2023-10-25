@@ -87,7 +87,11 @@ def known_unknown_acc(openmax_predictions_per_model, num_clusters_per_class=1):
         # else:
         condensed_cluster_to_class = openmax_predictions_per_model[key]
         for label in sorted(condensed_cluster_to_class):
-            label_tensor = condensed_cluster_to_class[label]
+            label_tensor = torch.where(
+                    condensed_cluster_to_class[label] != -1,
+                    condensed_cluster_to_class[label].int() // num_clusters_per_class,
+                    condensed_cluster_to_class[label],
+                )
             counts = torch.sum(label_tensor.eq(label))
             total = label_tensor.size(dim=0)
             if label != -1:

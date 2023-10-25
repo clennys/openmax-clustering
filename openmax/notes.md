@@ -7,3 +7,6 @@
 - Compare y_ic and P_c
 - Change input of openmax_learninng -> training_data and validation_data
 - Second Dec Week (Before weekend)
+
+- Not all cluster guessed example openmax fix
+    - `models_props_dict[model_key][class].shape[1000, 12])`
