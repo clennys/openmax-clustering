@@ -27,7 +27,7 @@ def hdbscan(min_cluster_size_, min_samples_, clustering_data):
 
 def dbscan(eps_: int, min_samples_: int, clustering_data):
     clusterer_dbscan = DBSCAN(
-        eps=eps_, min_samples=min_samples_, metric="euclidean"
+        eps=eps_, min_samples=min_samples_, metric="cosine"
     ).fit(clustering_data)
 
     n_clusters_ = len(set(clusterer_dbscan.labels_)) - (

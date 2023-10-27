@@ -3,6 +3,8 @@ from vast.opensetAlgos.openmax import fit_high
 from torch import Tensor
 import torch.nn as nn
 from loguru import logger
+from clustering import *
+import numpy as np
 
 
 def euclidean_pairwisedistance(x: Tensor, y: Tensor) -> Tensor:
@@ -31,6 +33,24 @@ def multiply_tensors_with_sign(sorted_activations, weights):
     return sorted_activations * weights
 
 
+def val_features_clustering(val_features_dict, eps, min_samples):
+    sorted_values = [val_features_dict[key] for key in sorted(val_features_dict.keys())]
+    val_features = torch.cat(list(sorted_values))
+    clusterer, n_clusters, n_noise = dbscan(eps, min_samples, val_features.numpy())
+    logger.info(f"DBSCAN clustered with {n_clusters} clusters and {n_noise} outliers")
+    cluster_features_dict = {}
+    for cluster_label, values in zip(clusterer.labels_, val_features):
+        if cluster_label in cluster_features_dict:
+            cluster_features_dict[cluster_label] = torch.cat((cluster_features_dict[cluster_label], values), 0)
+        else:
+            cluster_features_dict[cluster_label] = values
+    return cluster_features_dict
+
+
+
+
+
+
 def openmax_run(
     tail_sizes: list,
     distance_multpls: list,
@@ -40,6 +60,8 @@ def openmax_run(
     alpha: int,
     total_num_clusters=10,
 ):
+    val_features_clustered_dict = val_features_clustering(val_features_dict, 0.2, 100)
+    print(val_features_clustered_dict)
     models_dict = {}
     for tail in tail_sizes:
         for dist_mult in distance_multpls:

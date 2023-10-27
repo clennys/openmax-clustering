@@ -20,14 +20,13 @@ def logger_setup(debug_output:bool):
         logger.add("./logs/debug_log_{time}.log", level="DEBUG")
     logger.add(sys.stderr, level="INFO")
 
-    parser = argparse.ArgumentParser()
-
 def args_setup():
     parser = argparse.ArgumentParser(prog='CNN with MNIST and OpenMax',
                     description='TODO: runs models',
                     epilog='TODO: May the force be with you.')
     parser.add_argument('--base', '-b',  action='store_true',  help='Runs the baseline model')
     parser.add_argument('--input-cluster', '-ic',  type=int, help='Runs the cluster model with the specified number of clusters')
+    parser.add_argument('--feature-cluster', '-fc',  type=int, help='Runs the cluster model with the specified number of clusters')
     parser.add_argument('--debug', '-d', action='store_true', help='activate debug output in log file')
     parser.add_argument('--epochs', '-e',  type=int, help='number of epochs during the training phase')
     parser.add_argument('--train-only', '-to', action='store_true', help='only train network')
