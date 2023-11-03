@@ -3,12 +3,12 @@ learning_rate: 0.01
 epochs: 1
 batch_size: 32
 
-num_clusters_per_class: 3
+num_clusters_per_class: [2, 3, 4, 5, 6, 7]
 
 alphas: [3, 5, 8, 9] 
-tail_sizes: [10, 100, 250, 500, 750, 1000]
-distance_multpls: [1.50, 1.7, 2.0, 2.3]
-negative_fix: "ABS_REC_ACTV" # "VALUE_SHIFT", "ABS_REV_ACTV",   
+tail_sizes: [750, 900, 1000, 1200, 1500 ]
+distance_multpls: [1.25, 1.50, 1.7, 2.0, 2.3, 2.5, 2.7]
+negative_fix: ["ORIGINAL" , "VALUE_SHIFT", "ABS_REV_ACTV"]
 
 logger_output: false
 train_only: false
