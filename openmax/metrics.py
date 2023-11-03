@@ -80,11 +80,6 @@ def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_cla
         knowns_acc = [0, 0]
         unknown_acc = [0, 0]
         condensed_cluster_to_class = {}
-        # if num_clusters_per_class > 100:
-        #     condensed_cluster_to_class = clusters_to_class(
-        #         openmax_predictions_per_model[key], num_clusters_per_class
-        #     )
-        # else:
         condensed_cluster_to_class = openmax_predictions_per_model[key]
         for label in sorted(condensed_cluster_to_class):
             label_tensor = torch.where(

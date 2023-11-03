@@ -4,8 +4,7 @@ from tqdm import tqdm
 from loguru import logger
 
 
-def validation(model, val_data_loader, validation_data, loss_fn, path_model=""):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def validation(model, val_data_loader, validation_data, loss_fn, path_model="", device=None):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")

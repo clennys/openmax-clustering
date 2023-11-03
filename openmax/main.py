@@ -54,6 +54,9 @@ def args_setup():
     parser.add_argument(
         "--train-only", "-to", action="store_true", help="only train network"
     )
+    parser.add_argument(
+        "--gpu", "-g", type=int, help="GPU index"
+    )
 
     parser.add_argument('filename')
 
@@ -66,7 +69,10 @@ def save_oscr_values(path, model_type, num_cluster_per_class, oscr_dict, alpha, 
     logger.info(f"OSCR Data saved as {file_}.")
         
 
-def baseline_model(params):
+def baseline_model(params, gpu):
+    
+    device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
+    
     BATCH_SIZE = params.batch_size
     EPOCHS =  params.epochs
     logger.info(f"Using Baseline model with Batch-size = {BATCH_SIZE}")
@@ -119,16 +125,16 @@ def baseline_model(params):
     path_model = params.saved_models_dir + "openmax_cnn_eminst0.pth"
 
     training_features_dict = train(
-        model, training_data, train_data_loader, optimizer, loss_fn, EPOCHS, path_model
+        model, training_data, train_data_loader, optimizer, loss_fn, EPOCHS, path_model, device=device
     )
 
     if not params.train_only:
         val_features_dict, val_logits_dict = validation(
-            model, val_data_loader, validation_data, loss_fn, path_model
+            model, val_data_loader, validation_data, loss_fn, path_model, device=device
         )
 
         test_features_dict, test_logits_dict = test(
-            model, test_data_loader, test_data, loss_fn, path_model
+            model, test_data_loader, test_data, loss_fn, path_model, device=device
         )
 
 
@@ -156,10 +162,10 @@ def baseline_model(params):
 
                 ccr_fpr_per_model = oscr(openmax_scores_per_model)
 
-                save_oscr_values(params.experiment_data_dir, "base", 1, ccr_fpr_per_model, alpha, params.negative_fix)
+                save_oscr_values(params.experiment_data_dir, "base", 1, ccr_fpr_per_model, alpha, negative_fix)
 
 
-def input_cluster_model(params):
+def input_cluster_model(params, gpu):
     BATCH_SIZE = params.batch_size
     EPOCHS = params.epochs
     for n_clusters in params.num_clusters_per_class:
@@ -279,7 +285,7 @@ def input_cluster_model(params):
                 
                 save_oscr_values(params.eperiment_data_dir,"base", n_clusters, ccr_fpr_per_model, alpha, params.negative_fix)
 
-def feature_cluster_model(params):
+def feature_cluster_model(params, gpu):
     BATCH_SIZE = params.batch_size
     EPOCHS = params.epochs
 
@@ -383,8 +389,8 @@ if __name__ == "__main__":
     params = Params(args.filename)
     logger_setup(params.logger_output, params.log_dir)
     if params.type == "base":
-        baseline_model(params)
+        baseline_model(params, args.gpu)
     elif params.type == "input-cluster":
-        input_cluster_model(params)
+        input_cluster_model(params, args.gpu)
     elif params.type == "feature-cluster":
-        feature_cluster_model(params)
+        feature_cluster_model(params, args.gpu)

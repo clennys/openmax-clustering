@@ -13,9 +13,9 @@ def train(
     num_epochs,
     path_model="",
     cluster_per_class=1,
-    input_clustering = False
+    input_clustering = False,
+    device=None
 ):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
