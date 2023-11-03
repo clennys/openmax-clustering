@@ -10,6 +10,9 @@ def test(model, test_data_loader, test_data, loss_fn, path_model=""):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
 
+    
+    model = model.to(device)  # Move model to GPU
+
     val_logits_dict = {}
     val_features_dict = {}
 
@@ -21,6 +24,10 @@ def test(model, test_data_loader, test_data, loss_fn, path_model=""):
 
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Testing")
+
+                batch_inputs, batch_labels = batch_inputs.to(device), batch_labels.to(
+                    device
+                )
 
                 val_predictions, val_logits, val_features = model(batch_inputs)
 
