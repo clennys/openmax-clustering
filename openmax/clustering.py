@@ -26,9 +26,9 @@ def hdbscan(min_cluster_size_, min_samples_, clustering_data):
 
 
 def dbscan(eps_: int, min_samples_: int, clustering_data):
-    clusterer_dbscan = DBSCAN(
-        eps=eps_, min_samples=min_samples_, metric="cosine"
-    ).fit(clustering_data)
+    clusterer_dbscan = DBSCAN(eps=eps_, min_samples=min_samples_, metric="cosine").fit(
+        clustering_data
+    )
 
     n_clusters_ = len(set(clusterer_dbscan.labels_)) - (
         1 if -1 in clusterer_dbscan.labels_ else 0
@@ -37,7 +37,10 @@ def dbscan(eps_: int, min_samples_: int, clustering_data):
 
     return clusterer_dbscan, n_clusters_, n_noise_
 
+
 def kmeans_constrained(n_clusters_, size_min_, size_max_, clustering_data):
-    clusterer_kmeans_c = KMeansConstrained(n_clusters=n_clusters_, size_min=size_min_, size_max=size_max_)
+    clusterer_kmeans_c = KMeansConstrained(
+        n_clusters=n_clusters_, size_min=size_min_, size_max=size_max_
+    )
     clusterer_kmeans_c.fit(clustering_data)
     return clusterer_kmeans_c

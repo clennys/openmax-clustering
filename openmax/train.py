@@ -13,13 +13,13 @@ def train(
     num_epochs,
     path_model="",
     cluster_per_class=1,
+    input_clustering = False
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
-
 
     model = model.to(device)  # Move model to GPU
 
@@ -40,9 +40,7 @@ def train(
                 )
 
                 optimizer.zero_grad()
-                training_predictions, _, training_features = model(
-                    batch_inputs
-                )
+                training_predictions, _, training_features = model(batch_inputs)
 
                 if epoch == num_epochs - 1:
                     _, training_pred = torch.max(training_predictions, 1)
@@ -67,18 +65,19 @@ def train(
 
                 _, predicted = torch.max(training_predictions, 1)
                 correct_predictions += (predicted == batch_labels).sum().item()
-                non_cluster_predicted = torch.div(predicted, 3, rounding_mode='floor').int()
-                non_cluster_batch_labels = torch.div(batch_labels, 3, rounding_mode='floor').int()
-                correct_predictions_cluster += (
-                    (
-                        non_cluster_predicted
-                        == non_cluster_batch_labels
+                if input_clustering:
+                    non_cluster_predicted = torch.div(predicted, 3, rounding_mode='floor').int()
+                    non_cluster_batch_labels = torch.div(batch_labels, 3, rounding_mode='floor').int()
+                    correct_predictions_cluster += (
+                        (
+                            non_cluster_predicted
+                            == non_cluster_batch_labels
+                        )
+                        .sum()
+                        .item()
                     )
-                    .sum()
-                    .item()
-                )
                 logger.debug(f"TRAIN PRE: Pred: {predicted}, Batch: {batch_labels}")
-                logger.debug(f"TRAIN POST: Pred: {non_cluster_predicted}, Batch: {non_cluster_batch_labels}")
+                # logger.debug(f"TRAIN POST: Pred: {non_cluster_predicted}, Batch: {non_cluster_batch_labels}")
 
                 curr_acc = correct_predictions / len(training_data)
                 tepoch.set_postfix(loss=loss.item(), acc=curr_acc)
@@ -86,9 +85,14 @@ def train(
             accuracy = correct_predictions / len(training_data)
             accuracy_cluster = correct_predictions_cluster / len(training_data)
             avg_loss = total_loss / len(train_data_loader)
-            logger.info(
-                f"Average loss: {avg_loss:.3f} - Accuracy w/ cluster: {accuracy:.3f} - Accuray w\ cluster: {accuracy_cluster:.3f}"
-            )
+            if input_clustering:
+                logger.info(
+                    f"Average loss: {avg_loss:.3f} - Accuracy w/ cluster: {accuracy:.3f} - Accuray w\ cluster: {accuracy_cluster:.3f}"
+                )
+            else:
+                logger.info(
+                        f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}"
+                    )
 
     # Save the trained model
     torch.save(model.state_dict(), path_model)

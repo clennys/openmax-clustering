@@ -74,9 +74,9 @@ def clusters_to_class(clusters_dict, num_clusters_per_class):
     return condensed_cluster_to_class
 
 
-def known_unknown_acc(openmax_predictions_per_model, num_clusters_per_class=1):
+def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_class=1):
     for key in openmax_predictions_per_model:
-        print(f" ======= {key} ====== ")
+        print(f" ======= {key} - {alpha} ====== ")
         knowns_acc = [0, 0]
         unknown_acc = [0, 0]
         condensed_cluster_to_class = {}
@@ -88,10 +88,10 @@ def known_unknown_acc(openmax_predictions_per_model, num_clusters_per_class=1):
         condensed_cluster_to_class = openmax_predictions_per_model[key]
         for label in sorted(condensed_cluster_to_class):
             label_tensor = torch.where(
-                    condensed_cluster_to_class[label] != -1,
-                    condensed_cluster_to_class[label].int() // num_clusters_per_class,
-                    condensed_cluster_to_class[label],
-                )
+                condensed_cluster_to_class[label] != -1,
+                condensed_cluster_to_class[label].int() // num_clusters_per_class,
+                condensed_cluster_to_class[label],
+            )
             counts = torch.sum(label_tensor.eq(label))
             total = label_tensor.size(dim=0)
             if label != -1:
@@ -112,3 +112,18 @@ def ccr_fpr_plot(ccr_fpr_per_model):
         axs.plot(ccr_fpr_per_model[key][1], ccr_fpr_per_model[key][0], label=key)
     plt.legend(loc="lower right")
     plt.show()
+
+def oscr(openmax_scores_per_model):
+    processed_oscr_openmax_scores_per_model: dict = {}
+    for model_key in openmax_scores_per_model.keys():
+        processed_oscr_openmax_scores_per_model[model_key] = preprocess_oscr(
+            openmax_scores_per_model[model_key]
+        )
+
+    ccr_fpr_per_model: dict = {}
+    for model_key in processed_oscr_openmax_scores_per_model.keys():
+        ccr_fpr_per_model[model_key] = calculate_oscr(
+            processed_oscr_openmax_scores_per_model[model_key][0],
+            processed_oscr_openmax_scores_per_model[model_key][1],
+        )
+    return ccr_fpr_per_model

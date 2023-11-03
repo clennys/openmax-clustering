@@ -22,6 +22,30 @@
             "justMyCode": true
         },
 
+     {
+            "name": "Python: OpenMax Features Cluster [1]",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/openmax/main.py",
+            "args" : ["-fc", "3", "-e", "1"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+  {
+            "name": "Python: OpenMax FILE",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/openmax/main.py",
+            "args" : ["params.yaml"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+
+
+
+
 
     ]
 }
