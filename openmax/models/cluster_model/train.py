@@ -11,17 +11,16 @@ def train(
     optimizer,
     loss_fn,
     num_epochs,
-    path_model="",
-    cluster_per_class=1,
-    input_clustering = False,
-    device=None
+    path_model,
+    input_clustering,
+    device
 ):
 
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
 
-    model = model.to(device)  # Move model to GPU
+    model = model.to(device)
 
     features_dict = {}
 
@@ -42,7 +41,7 @@ def train(
                 optimizer.zero_grad()
                 training_predictions, _, training_features = model(batch_inputs)
 
-                if epoch == num_epochs - 1:
+                if input_clustering and epoch == num_epochs - 1:
                     _, training_pred = torch.max(training_predictions, 1)
                     for pred, label, features in zip(
                         training_pred, batch_labels, training_features
@@ -57,7 +56,6 @@ def train(
 
                 loss = loss_fn(training_predictions, batch_labels)
 
-                # Backpropagation and optimization
                 loss.backward()
                 optimizer.step()
 
@@ -76,8 +74,6 @@ def train(
                         .sum()
                         .item()
                     )
-                logger.debug(f"TRAIN PRE: Pred: {predicted}, Batch: {batch_labels}")
-                # logger.debug(f"TRAIN POST: Pred: {non_cluster_predicted}, Batch: {non_cluster_batch_labels}")
 
                 curr_acc = correct_predictions / len(training_data)
                 tepoch.set_postfix(loss=loss.item(), acc=curr_acc)
@@ -85,6 +81,7 @@ def train(
             accuracy = correct_predictions / len(training_data)
             accuracy_cluster = correct_predictions_cluster / len(training_data)
             avg_loss = total_loss / len(train_data_loader)
+
             if input_clustering:
                 logger.info(
                     f"Average loss: {avg_loss:.3f} - Accuracy w/ cluster: {accuracy:.3f} - Accuray w\ cluster: {accuracy_cluster:.3f}"
