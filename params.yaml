@@ -1,14 +1,21 @@
-type: "base"
+type: "feature-cluster" # base, input-cluster feature-cluster
 learning_rate: 0.01
+momentum: 0.9
 epochs: 1
 batch_size: 32
 
 num_clusters_per_class: [2, 3, 4, 5, 6, 7]
 
-alphas: [3, 5, 8, 9] 
-tail_sizes: [750, 900, 1000, 1200, 1500]
-distance_multpls: [1.25, 1.50, 1.7, 2.0, 2.3, 2.5]
-negative_fix: ["ORIGINAL" , "VALUE_SHIFT", "ABS_REV_ACTV"]
+alphas: [7] 
+# tail_sizes: [900, 1000, 1200, 1500]
+
+tail_sizes: [10, 100, 250, 500, 750, 1000]
+
+# distance_multpls: [1.25, 1.50, 1.7, 2.0, 2.3]
+distance_multipls: [1.50, 1.7, 2.0, 2.3]
+
+distance_multpls: [1.25, 1.50, 1.7, 2.0, 2.3]
+negative_fix: ["Original"] # "VALUE_SHIFT", "ABS_REV_ACTV"]
 
 logger_output: false
 train_only: false
