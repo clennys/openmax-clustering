@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import pickle
+from loguru import logger
 
 
 def preprocess_oscr(class_scores_dict: dict):
@@ -77,7 +78,7 @@ def clusters_to_class(clusters_dict, num_clusters_per_class):
 
 def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_class=1):
     for key in openmax_predictions_per_model:
-        print(f" ======= {key} - {alpha} ====== ")
+        logger.debug(f" ======= {key} - {alpha} ====== ")
         knowns_acc = [0, 0]
         unknown_acc = [0, 0]
         condensed_cluster_to_class = {}
@@ -96,8 +97,8 @@ def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_cla
             else:
                 unknown_acc[0] = int(counts.item())
                 unknown_acc[1] = total
-            print(f"Acc per label {label}: {counts} / {total}")
-        print(
+            logger.debug(f"Acc per label {label}: {counts} / {total}")
+        logger.debug(
             f"\nKnown: {knowns_acc[0]/knowns_acc[1]:.3f}, Unknown {unknown_acc[0]/unknown_acc[1]:.3f} \n"
         )
 
@@ -108,6 +109,7 @@ def ccr_fpr_plot(ccr_fpr_per_model):
         axs.plot(ccr_fpr_per_model[key][1], ccr_fpr_per_model[key][0], label=key)
     plt.legend(loc="lower right")
     plt.show()
+
 
 def oscr(openmax_scores_per_model):
     processed_oscr_openmax_scores_per_model: dict = {}
@@ -124,8 +126,14 @@ def oscr(openmax_scores_per_model):
         )
     return ccr_fpr_per_model
 
-def save_oscr_values(path, model_type, num_cluster_per_class, oscr_dict, alpha, negative_fix):
-    file_ = path + f"oscr_data_{model_type}_{num_cluster_per_class}_{alpha}_{negative_fix}.pkl"
-    with open(file_, 'wb') as f:
+
+def save_oscr_values(
+    path, model_type, num_cluster_per_class, oscr_dict, alpha, negative_fix
+):
+    file_ = (
+        path
+        + f"oscr_data_{model_type}_{num_cluster_per_class}_{alpha}_{negative_fix}.pkl"
+    )
+    with open(file_, "wb") as f:
         pickle.dump(oscr_dict, f)
     logger.info(f"OSCR Data saved as {file_}.")

@@ -13,7 +13,6 @@ def testing(
     path_model,
     device,
 ):
-
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")

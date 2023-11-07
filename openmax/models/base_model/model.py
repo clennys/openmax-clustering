@@ -1,6 +1,5 @@
 import torch.nn as nn
 from loguru import logger
-import torch
 
 
 class LeNet(nn.Module):

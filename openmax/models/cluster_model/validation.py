@@ -11,9 +11,8 @@ def validation(
     num_cluster_per_class_input,
     path_model,
     feature_clustering,
-    device
+    device,
 ):
-
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")

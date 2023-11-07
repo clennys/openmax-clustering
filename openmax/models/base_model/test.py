@@ -9,7 +9,6 @@ def testing(model, test_data_loader, test_data, loss_fn, path_model="", device=N
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
 
-    
     model = model.to(device)  # Move model to GPU
 
     val_logits_dict = {}
@@ -58,5 +57,3 @@ def testing(model, test_data_loader, test_data, loss_fn, path_model="", device=N
             avg_loss = total_loss / len(test_data_loader)
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict
-
-

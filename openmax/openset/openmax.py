@@ -1,11 +1,8 @@
-from collections import Counter
 import torch
 from vast.opensetAlgos.openmax import fit_high
 from torch import Tensor
 import torch.nn as nn
-from loguru import logger
-from clustering import *
-import numpy as np
+from clustering.agglomerative_clustering import agglo_clustering
 
 
 def euclidean_pairwisedistance(x: Tensor, y: Tensor) -> Tensor:
@@ -28,31 +25,33 @@ def cosine_pairwisedistance(x, y):
 
 def multiply_tensors_with_sign(sorted_activations, weights):
     mask = sorted_activations < 0
-    weights[mask] = 1 + (
-        1 - weights[mask]
-    )  # Change negative values to 50.0 or any other desired value
+    weights[mask] = 1 + (1 - weights[mask])
     return sorted_activations * weights
 
 
 def val_features_clustering(features, num_cluster_pro_class):
-    # TODO: CLUSTER PER LABEL HERE NOT PER CLUSTER LABEL
-    # clusterer, n_clusters, n_noise = dbscan(eps, min_samples, features.numpy())
     cluster_features_dict = {}
     for key in features.keys():
-        clusterer= agglo_clustering(num_cluster_pro_class, 'ward', 'euclidean',features[key].numpy())
+        clusterer = agglo_clustering(
+            num_cluster_pro_class, "ward", "euclidean", features[key].numpy()
+        )
         for cluster_label, values in zip(clusterer.labels_, features[key]):
-            dict_key_cluster = key*num_cluster_pro_class + cluster_label
+            dict_key_cluster = key * num_cluster_pro_class + cluster_label
             if dict_key_cluster in cluster_features_dict:
                 cluster_features_dict[dict_key_cluster] = torch.cat(
-                    (cluster_features_dict[dict_key_cluster], values[None, :]))   
+                    (cluster_features_dict[dict_key_cluster], values[None, :])
+                )
             else:
                 cluster_features_dict[dict_key_cluster] = values[None, :]
     return cluster_features_dict
 
+
 def max_props_feature_clustering(props_dict, n_clusters_per_class):
     cluster_max_props_dict = {}
     for key in props_dict.keys():
-        props_reshaped = props_dict[key].view(props_dict[key].shape[0], 10, n_clusters_per_class)
+        props_reshaped = props_dict[key].view(
+            props_dict[key].shape[0], 10, n_clusters_per_class
+        )
         cluster_max_props_dict[key], _ = torch.max(props_reshaped, dim=2)
     return cluster_max_props_dict
 
@@ -66,11 +65,12 @@ def openmax_run(
     alpha: int,
     negative_fix,
     n_clusters_per_class=1,
-    feature_cluster = False
+    feature_cluster=False,
 ):
-
     if feature_cluster:
-        training_features_dict = val_features_clustering(training_features_dict, n_clusters_per_class)
+        training_features_dict = val_features_clustering(
+            training_features_dict, n_clusters_per_class
+        )
 
     models_dict = {}
     for tail in tail_sizes:
@@ -78,24 +78,20 @@ def openmax_run(
             model_ = openmax_training(training_features_dict, dist_mult, tail)
             key = f"{tail}-{dist_mult}"
             models_dict[key] = model_
-    logger.debug(f"After Openmax training models_dict: {models_dict}")
 
     models_props_dict = {}
     for key in models_dict.keys():
         props_dict: dict = openmax_inference(
-            val_features_dict, models_dict[key], n_clusters_per_class*10
+            val_features_dict, models_dict[key], n_clusters_per_class * 10
         )
 
         if feature_cluster:
             props_dict = max_props_feature_clustering(props_dict, n_clusters_per_class)
         models_props_dict[key] = props_dict
 
-    logger.debug(f"After Openmax inference models_prob_dict: {models_props_dict}")
-
 
     openmax_models_scores = {}
     openmax_models_predictions = {}
-
 
     for model_idx in models_dict.keys():
         openmax_scores_dict = {}
@@ -111,16 +107,13 @@ def openmax_run(
                 models_props_dict[model_idx][key],
                 val_logits_dict[key],
                 alpha=alpha,
-                negative_fix = negative_fix,
+                negative_fix=negative_fix,
                 ignore_unknown_class=False,
             )
 
         openmax_models_scores[model_idx] = openmax_scores_dict
         openmax_models_predictions[model_idx] = openmax_predictions_dict
 
-    logger.debug(
-        f"Openmax training: {models_dict}, Openmax inference {models_props_dict}, openmax_alpha {openmax_models_scores}"
-    )
     return (
         models_dict,
         models_props_dict,
@@ -196,30 +189,20 @@ def openmax_alpha(
 
     # Line 1: Sort for highest activation value
     sorted_activations, indices = torch.sort(activations, descending=True, dim=1)
-    logger.debug(
-        f"Line [1]: activ: {activations.shape}, sorted_actv: {sorted_activations.shape} indices: {indices.shape}"
-    )
 
     # Create weights of ones in correct shape
     weights = torch.ones(activations.shape[0], activations.shape[1])
-
-    logger.debug(f"LINE [1]: weights: {weights}")
 
     # Line 2-4
     # Creating a sequence of integers from 1 to alpha (inclusive) with a stepsize 1
     # Sequence is assigned to the first alpha columns of all rows in weights
     weights[:, :alpha] = torch.arange(1, alpha + 1, step=1)
-    logger.debug(f"LINE [2-4]a: weights: {weights}")
 
     # Subtracts the current value in these position alhpa and then divides the result by alpha (elementwise)
     weights[:, :alpha] = (alpha - weights[:, :alpha]) / alpha
-    logger.debug(f"LINE [2-4]b: weights: {weights}")
 
     weights[:, :alpha] = 1 - weights[:, :alpha] * torch.gather(
         per_class_unknownness_prob, 1, indices[:, :alpha]
-    )
-    logger.debug(
-        f"LINE [2-4]c: weights: {weights[:, :alpha].shape}, indices: {indices[:,:alpha].shape}"
     )
 
     if negative_fix == "VALUE_SHIFT":
@@ -240,35 +223,27 @@ def openmax_alpha(
         # Add the minimum values to the corresponding rows of the original tensor
         sorted_activations = torch.add(sorted_activations, min_values_reshaped_abs)
 
-        logger.debug(f"LINE [2-4]d VALUE_SHIFT: {sorted_activations}")
-
     # Line 5
     if negative_fix == "ABS_REV_ACTV":
         assert not torch.any(
             torch.gt(weights, 1)
         ), "The tensor contains value bigger than 1"
         revisted_activations = multiply_tensors_with_sign(sorted_activations, weights)
-        logger.debug(f"LINE [5] ABS_REV_ACTV: {revisted_activations}")
     else:
         revisted_activations = sorted_activations * weights
-        logger.debug(f"LINE [5] ORIGINAL: {revisted_activations}")
 
     # Line 6
     unknowness_class_prob = torch.sum(sorted_activations * (1 - weights), dim=1)
     revisted_activations = torch.scatter(
         torch.ones(revisted_activations.shape), 1, indices, revisted_activations
     )
-    logger.debug(f"LINE [6]a: unknowness class p: {unknowness_class_prob}")
-    logger.debug(f"LINE [6]b: revisted_act: {revisted_activations}")
 
     probability_vector = torch.cat(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
     )
-    logger.debug(f"LINE [6]c: prob vec: {probability_vector}")
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)
-    logger.debug(f"LINE [7]: softmax prob vec: {probability_vector}")
 
     if ignore_unknown_class:
         probs_kkc = probability_vector[:, 1:].clone().detach()
@@ -277,7 +252,6 @@ def openmax_alpha(
 
     # Line 8
     prediction_score, predicted_class = torch.max(probability_vector, dim=1)
-    logger.debug(f"LINE [8]a: prediction_score: prediction_score")
 
     # Line 9
     prediction_score[predicted_class == 0] = -1.0

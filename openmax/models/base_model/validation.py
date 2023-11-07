@@ -4,11 +4,12 @@ from tqdm import tqdm
 from loguru import logger
 
 
-def validation(model, val_data_loader, validation_data, loss_fn, path_model="", device=None):
+def validation(
+    model, val_data_loader, validation_data, loss_fn, path_model="", device=None
+):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
-
 
     model = model.to(device)  # Move model to GPU
 
@@ -28,10 +29,10 @@ def validation(model, val_data_loader, validation_data, loss_fn, path_model="", 
                     device
                 )
 
-
                 val_predictions, val_logits, val_features = model(batch_inputs)
 
                 _, val_predicted = torch.max(val_predictions, 1)
+
                 for pred, label, logits, features in zip(
                     val_predicted, batch_labels, val_logits, val_features
                 ):
@@ -59,5 +60,3 @@ def validation(model, val_data_loader, validation_data, loss_fn, path_model="", 
             avg_loss = total_loss / len(val_data_loader)
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict
-
-

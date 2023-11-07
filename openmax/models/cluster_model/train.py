@@ -13,9 +13,8 @@ def train(
     num_epochs,
     path_model,
     input_clustering,
-    device
+    device,
 ):
-
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
@@ -64,15 +63,14 @@ def train(
                 _, predicted = torch.max(training_predictions, 1)
                 correct_predictions += (predicted == batch_labels).sum().item()
                 if input_clustering:
-                    non_cluster_predicted = torch.div(predicted, 3, rounding_mode='floor').int()
-                    non_cluster_batch_labels = torch.div(batch_labels, 3, rounding_mode='floor').int()
+                    non_cluster_predicted = torch.div(
+                        predicted, 3, rounding_mode="floor"
+                    ).int()
+                    non_cluster_batch_labels = torch.div(
+                        batch_labels, 3, rounding_mode="floor"
+                    ).int()
                     correct_predictions_cluster += (
-                        (
-                            non_cluster_predicted
-                            == non_cluster_batch_labels
-                        )
-                        .sum()
-                        .item()
+                        (non_cluster_predicted == non_cluster_batch_labels).sum().item()
                     )
 
                 curr_acc = correct_predictions / len(training_data)
@@ -87,9 +85,7 @@ def train(
                     f"Average loss: {avg_loss:.3f} - Accuracy w/ cluster: {accuracy:.3f} - Accuray w\ cluster: {accuracy_cluster:.3f}"
                 )
             else:
-                logger.info(
-                        f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}"
-                    )
+                logger.info(f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}")
 
     # Save the trained model
     torch.save(model.state_dict(), path_model)

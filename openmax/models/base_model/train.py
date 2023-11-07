@@ -12,9 +12,8 @@ def train(
     loss_fn,
     num_epochs,
     path_model="",
-    device=None
+    device=None,
 ):
-
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
@@ -71,9 +70,7 @@ def train(
             accuracy = correct_predictions / len(training_data)
 
             avg_loss = total_loss / len(train_data_loader)
-            logger.info(
-                    f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}"
-                )
+            logger.info(f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}")
 
     # Save the trained model
     torch.save(model.state_dict(), path_model)

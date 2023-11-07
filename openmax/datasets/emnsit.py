@@ -3,7 +3,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
-import clustering as cl
+import clustering.agglomerative_clustering as cl
 from loguru import logger
 
 
