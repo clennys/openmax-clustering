@@ -1,5 +1,4 @@
 import torch
-from loguru import logger
 import torch.nn as nn
 from datasets.emnsit import EMNIST
 from models.cluster_model.train import *
@@ -9,7 +8,7 @@ from models.base_model.model import LeNet
 from openset.openmax import *
 from openset.metrics import *
 from util.Hyperparameters import *
-
+from loguru import logger
 
 def init_datasets(params, cluster_per_class=1):
     train_data = EMNIST(
@@ -61,7 +60,7 @@ def init_dataloader(train_data, validation_data, test_data, batch_size):
 def cluster_model(params, gpu, input_clustering, feature_clustering):
     if not input_clustering and not feature_clustering:
         raise Exception(
-            "Need to specify at least on clusering, otherwise select base model."
+            "Need to specify at least one clusering option, otherwise select the base model."
         )
 
     device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
@@ -114,7 +113,7 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
             loss_fn,
             params.epochs,
             path_model,
-            True,
+            input_clustering,
             device,
         )
 
@@ -125,7 +124,7 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                 validation_data_loader,
                 n_clusters_per_class_input,
                 path_model,
-                False,
+                feature_clustering,
                 device,
             )
 
@@ -142,46 +141,33 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
             tail_sizes = params.tail_sizes
             logger.info(f"openmax: tail_sizes {tail_sizes}")
 
-            distance_multpls = params.distances_multpls
+            distance_multpls = params.distance_multpls
             logger.info(f"openmax: distance_multpls {distance_multpls}")
 
             negative_fix = params.negative_fix[0]
 
+            openmax_training_data = val_features_dict if feature_clustering else training_features_dict
+
             for n_clusters_per_class_features in params.num_clusters_per_class_features:
                 for alpha in params.alphas:
-                    if feature_clustering:
-                        (
-                            _,
-                            _,
-                            openmax_predictions_per_model,
-                            openmax_scores_per_model,
-                        ) = openmax_run(
-                            tail_sizes,
-                            distance_multpls,
-                            training_features_dict,
-                            test_features_dict,
-                            test_logits_dict,
-                            alpha=alpha,
-                            negative_fix=negative_fix,
-                            n_clusters_per_class=n_clusters_per_class_features,
-                        )
 
-                    else:
-                        (
-                            _,
-                            _,
-                            openmax_predictions_per_model,
-                            openmax_scores_per_model,
-                        ) = openmax_run(
-                            tail_sizes,
-                            distance_multpls,
-                            training_features_dict,
-                            test_features_dict,
-                            test_logits_dict,
-                            alpha=alpha,
-                            negative_fix=negative_fix,
-                            n_clusters_per_class=n_clusters_per_class_input,
-                        )
+                    n_cluster_per_class = n_clusters_per_class_features if feature_clustering else n_clusters_per_class_input
+                    (
+                        _,
+                        _,
+                        openmax_predictions_per_model,
+                        openmax_scores_per_model,
+                    ) = openmax_run(
+                        tail_sizes,
+                        distance_multpls,
+                        openmax_training_data,
+                        test_features_dict,
+                        test_logits_dict,
+                        alpha,
+                        negative_fix,
+                        n_cluster_per_class,
+                        feature_clustering
+                    )
 
                     known_unknown_acc(
                         openmax_predictions_per_model, n_clusters_per_class_input
@@ -190,10 +176,10 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                     ccr_fpr_per_model = oscr(openmax_scores_per_model)
 
                     save_oscr_values(
-                        params.eperiment_data_dir,
-                        "base",
+                        params.experiment_data_dir,
+                        params.type,
                         n_clusters_per_class_features,
                         ccr_fpr_per_model,
                         alpha,
-                        params.negative_fix,
+                        negative_fix,
                     )
