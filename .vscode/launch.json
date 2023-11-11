@@ -13,37 +13,44 @@
             "justMyCode": true
         },
         {
-            "name": "Python: OpenMax Cluster [3]",
+            "name": "Python: OpenMax basemodel",
             "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/openmax/main.py",
-            "args" : ["-ic", "3", "-e", "1"],
+            "args" : ["./configs/params_base.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
         },
 
-     {
-            "name": "Python: OpenMax Features Cluster [1]",
+        {
+            "name": "Python: OpenMax feature clustering",
             "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/openmax/main.py",
-            "args" : ["-fc", "3", "-e", "1"],
+            "args" : ["./configs/params_feature_cluster.yaml"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },        
+
+        {
+            "name": "Python: OpenMax input clustering",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/openmax/main.py",
+            "args" : ["./configs/params_input_cluster.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
         },
 
-  {
-            "name": "Python: OpenMax FILE",
+        {
+            "name": "Python: OpenMax input and feature clustering",
             "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/openmax/main.py",
-            "args" : ["params_base.yaml"],
+            "args" : ["./configs/params_input_feature_cluster.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
-        },
-
-
-
+        }
 
 
 

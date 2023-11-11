@@ -57,8 +57,9 @@ def init_dataloader(train_data, validation_data, test_data, batch_size):
     return train_data_loader, val_data_loader, test_data_loader
 
 def tensor_dict_to_cpu(tensors_dict):
-    for key in tensors_dict:
-        tensors_dict[key] = tensors_dict[key].cpu()
+    if torch.cuda.is_available():
+        for key in tensors_dict:
+            tensors_dict[key] = tensors_dict[key].cpu()
     return tensors_dict
 
 
@@ -147,7 +148,7 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
             tail_sizes = params.tail_sizes
             logger.info(f"openmax: tail_sizes {tail_sizes}")
 
-            distance_multpls = params.distance_multpls
+            distance_multpls = params.distance_multipls
             logger.info(f"openmax: distance_multpls {distance_multpls}")
 
             negative_fix = params.negative_fix[0]
@@ -172,11 +173,12 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                         alpha,
                         negative_fix,
                         n_cluster_per_class,
-                        feature_clustering
+                        feature_clustering,
+                        input_clustering
                     )
 
                     known_unknown_acc(
-                        openmax_predictions_per_model, n_clusters_per_class_input
+                        openmax_predictions_per_model, alpha, n_clusters_per_class_input
                     )
 
                     ccr_fpr_per_model = oscr(openmax_scores_per_model)

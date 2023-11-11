@@ -41,7 +41,7 @@ def validation(
                 for pred, label, logits, features in zip(
                     val_predicted, batch_labels, val_logits, val_features
                 ):
-                    if not feature_clustering or pred == label:
+                    if not feature_clustering or pred//num_cluster_per_class_input == label:
                         if label.item() in val_features_dict:
                             val_features_dict[label.item()] = torch.cat(
                                 (val_features_dict[label.item()], features[None, :]), 0
