@@ -76,7 +76,9 @@ def clusters_to_class(clusters_dict, num_clusters_per_class):
     return condensed_cluster_to_class
 
 
-def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_class=1):
+def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_class=1, max_condense=True):
+    if max_condense:
+        num_clusters_per_class=1
     for key in openmax_predictions_per_model:
         logger.debug(f" ======= {key} - {alpha} ====== ")
         knowns_acc = [0, 0]

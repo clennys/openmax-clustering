@@ -158,7 +158,6 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
             for n_clusters_per_class_features in params.num_clusters_per_class_features:
                 for alpha in params.alphas:
 
-                    n_cluster_per_class = n_clusters_per_class_features if feature_clustering else n_clusters_per_class_input
                     (
                         _,
                         _,
@@ -172,13 +171,14 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                         tensor_dict_to_cpu(test_logits_dict),
                         alpha,
                         negative_fix,
-                        n_cluster_per_class,
-                        feature_clustering,
-                        input_clustering
+                        n_clusters_per_class_input,
+                        n_clusters_per_class_features,
                     )
 
                     known_unknown_acc(
-                        openmax_predictions_per_model, alpha, n_clusters_per_class_input
+                        openmax_predictions_per_model,
+                          alpha,
+                          n_clusters_per_class_input, 
                     )
 
                     ccr_fpr_per_model = oscr(openmax_scores_per_model)

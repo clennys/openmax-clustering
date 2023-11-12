@@ -1,11 +1,11 @@
-type: "input-cluster" # base, input-cluster feature-cluster, input-feature-cluster
+type: "feature-cluster" # base, input-cluster feature-cluster, input-feature-cluster
 learning_rate: 0.01
 momentum: 0.9
 epochs: 1
 batch_size: 32
 
 num_clusters_per_class_input: [1]
-num_clusters_per_class_features: [5]
+num_clusters_per_class_features: [3]
 
 alphas: [-1] 
 # tail_sizes: [900, 1000, 1200, 1500]
@@ -14,10 +14,10 @@ alphas: [-1]
 
 # distance_multpls: [1.25, 1.50, 1.7, 2.0, 2.3]
 # distance_multipls: [1.50, 1.7, 2.0, 2.3]
-
-tail_sizes: [2, 5, 10, 30, 50, 100]
+tail_sizes: [5 , 50, 100, 500, 1000, 2000, 5000]
 
 distance_multipls: [1.25, 1.50, 1.7, 2.0, 2.3]
+
 
 negative_fix: ["ABS_REV_ACTV"] # "VALUE_SHIFT", "ABS_REV_ACTV"]
 

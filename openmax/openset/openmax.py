@@ -72,13 +72,16 @@ def openmax_run(
     openmax_alpha_logits_dict: dict,
     alpha: int,
     negative_fix,
-    n_clusters_per_class=1,
-    feature_clustering=False,
-    input_clustering=False
+    n_clusters_per_class_input=1,
+    n_clusters_per_class_features=1,
 ):
+
+    feature_clustering = n_clusters_per_class_features > 1
+    input_clustering = n_clusters_per_class_input > 1
+
     if feature_clustering:
         openmax_training_features_dict = val_features_clustering(
-            openmax_training_features_dict, n_clusters_per_class
+            openmax_training_features_dict, n_clusters_per_class_features
         )
 
     models_dict = {}
@@ -89,29 +92,21 @@ def openmax_run(
             models_dict[key] = model_
 
     models_props_dict = {}
+    total_num_clusters = n_clusters_per_class_features if feature_clustering else n_clusters_per_class_input
     for key in models_dict.keys():
         props_dict: dict = openmax_inference(
-            openmax_inference_features_dict, models_dict[key], n_clusters_per_class * 10
+            openmax_inference_features_dict, models_dict[key], total_num_clusters * 10
         )
 
-        if feature_clustering and not input_clustering:
-            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class)
-
-        if feature_clustering and input_clustering:
-            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class)
-
-        if not feature_clustering and input_clustering and False:
-            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class)
-
-
+        if feature_clustering:
+            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class_features)
+        elif input_clustering:
+            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class_input)
 
         models_props_dict[key] = props_dict
 
-    if feature_clustering and input_clustering:
-        openmax_alpha_logits_dict = max_entry_for_each_cluster(openmax_alpha_logits_dict, n_clusters_per_class)
-
-    if not feature_clustering and input_clustering and False:
-        openmax_alpha_logits_dict = max_entry_for_each_cluster(openmax_alpha_logits_dict, n_clusters_per_class)
+    if input_clustering:
+        openmax_alpha_logits_dict = max_entry_for_each_cluster(openmax_alpha_logits_dict, n_clusters_per_class_input)
 
 
     openmax_models_scores = {}
@@ -190,9 +185,9 @@ def openmax_inference(
                     model_[model_label]["weibull"].wscore(distances, isReversed=True)
                 )  # TODO: Reversed? 1 - weibull.cdf
             elif class_label == -1:
-                probs.append(torch.ones(8800, 1))
+                probs.append(torch.zeros(8800, 1))
             else:
-                probs.append(torch.ones(1000, 1))
+                probs.append(torch.zeros(1000, 1))
         probs = torch.cat(probs, dim=1)
         props_dict[class_label] = probs
 

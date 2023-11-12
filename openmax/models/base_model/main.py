@@ -105,8 +105,8 @@ def baseline_model(params, gpu):
                     training_features_dict,
                     test_features_dict,
                     test_logits_dict,
-                    alpha=alpha,
-                    negative_fix=negative_fix,
+                    alpha,
+                    negative_fix,
                 )
 
                 known_unknown_acc(openmax_predictions_per_model, alpha)
