@@ -77,6 +77,7 @@ def clusters_to_class(clusters_dict, num_clusters_per_class):
 
 
 def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_class=1, max_condense=True):
+    acc_per_model = {}
     if max_condense:
         num_clusters_per_class=1
     for key in openmax_predictions_per_model:
@@ -84,6 +85,7 @@ def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_cla
         knowns_acc = [0, 0]
         unknown_acc = [0, 0]
         condensed_cluster_to_class = {}
+        accuracy = {}
         condensed_cluster_to_class = openmax_predictions_per_model[key]
         for label in sorted(condensed_cluster_to_class):
             label_tensor = torch.where(
@@ -100,9 +102,13 @@ def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_cla
                 unknown_acc[0] = int(counts.item())
                 unknown_acc[1] = total
             logger.debug(f"Acc per label {label}: {counts} / {total}")
+            accuracy[label] = (counts, total)
         logger.debug(
             f"\nKnown: {knowns_acc[0]/knowns_acc[1]:.3f}, Unknown {unknown_acc[0]/unknown_acc[1]:.3f} \n"
         )
+        acc_per_model[key] = accuracy
+    return acc_per_model
+        
 
 
 def ccr_fpr_plot(ccr_fpr_per_model):
@@ -130,12 +136,12 @@ def oscr(openmax_scores_per_model):
 
 
 def save_oscr_values(
-    path, model_type, oscr_dict, alpha, negative_fix, cluster_input = 1, cluster_feature=1
+    path, model_type, oscr_dict, alpha, negative_fix, acc_per_model, cluster_input = 1, cluster_feature=1
 ):
     file_ = (
         path
         + f"oscr_data_{model_type}_{cluster_input}_{cluster_feature}_{alpha}_{negative_fix}.pkl"
     )
     with open(file_, "wb") as f:
-        pickle.dump(oscr_dict, f)
+        pickle.dump((oscr_dict, acc_per_model), f)
     logger.info(f"OSCR Data saved as {file_}.")

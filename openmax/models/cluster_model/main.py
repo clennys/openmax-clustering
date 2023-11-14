@@ -175,7 +175,7 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                         n_clusters_per_class_features,
                     )
 
-                    known_unknown_acc(
+                    acc_per_model = known_unknown_acc(
                         openmax_predictions_per_model,
                           alpha,
                           n_clusters_per_class_input, 
@@ -189,6 +189,7 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                         ccr_fpr_per_model,
                         alpha,
                         negative_fix,
+                        acc_per_model,
                         n_clusters_per_class_input,
                         n_clusters_per_class_features
                     )
