@@ -15,7 +15,7 @@ tail_sizes: [5, 10, 50, 100, 1000, 1200, 1500, 1900]
 distance_multipls: [1.25, 1.50, 1.7, 2.0, 2.3]
 
 
-negative_fix: ["ABS_REV_ACTV"] # "VALUE_SHIFT", "ABS_REV_ACTV"]
+negative_fix: ["Original"] # "VALUE_SHIFT", "ABS_REV_ACTV"]
 
 logger_output: true
 train_only: false
