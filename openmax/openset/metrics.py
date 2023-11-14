@@ -130,11 +130,11 @@ def oscr(openmax_scores_per_model):
 
 
 def save_oscr_values(
-    path, model_type, num_cluster_per_class, oscr_dict, alpha, negative_fix
+    path, model_type, oscr_dict, alpha, negative_fix, cluster_input = 1, cluster_feature=1
 ):
     file_ = (
         path
-        + f"oscr_data_{model_type}_{num_cluster_per_class}_{alpha}_{negative_fix}.pkl"
+        + f"oscr_data_{model_type}_{cluster_input}_{cluster_feature}_{alpha}_{negative_fix}.pkl"
     )
     with open(file_, "wb") as f:
         pickle.dump(oscr_dict, f)

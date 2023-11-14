@@ -7,16 +7,18 @@ batch_size: 32
 num_clusters_per_class_input: [2, 3, 4, 5, 6, 7]
 num_clusters_per_class_features: [2, 3, 4, 5, 6, 7]
 
-alphas: [-1 ] 
+alphas: [5] 
 
-# tail_sizes: [900, 1000, 1200, 1500]
-tail_sizes: [2, 5, 10, 30, 50, 100]
+tail_sizes: [5, 10, 50, 100, 1000, 1200, 1500, 1900]
+# tail_sizes: [2, 5, 10, 30, 50, 100]
 
 distance_multipls: [1.25, 1.50, 1.7, 2.0, 2.3]
 # distance_multpls: [1.25, 1.5, 1.8, 2.0, 2.3, 2.5,]
 
 
-negative_fix: ["Original"] # ["Original"]  ["VALUE_SHIFT"], ["ABS_REV_ACTV"]
+negative_fix: ["ABS_REV_ACTV"]
+# negative_fix: ["VALUE_SHIFT"] # ["Original"]  ["VALUE_SHIFT"], ["ABS_REV_ACTV"]
+# negative_fix: ["ABS_REV_ACTV" , "Original"]  ["VALUE_SHIFT"], ["ABS_REV_ACTV"]
 
 logger_output: true
 train_only: false

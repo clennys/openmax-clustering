@@ -186,8 +186,9 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                     save_oscr_values(
                         params.experiment_data_dir,
                         params.type,
-                        n_clusters_per_class_features,
                         ccr_fpr_per_model,
                         alpha,
                         negative_fix,
+                        n_clusters_per_class_input,
+                        n_clusters_per_class_features
                     )

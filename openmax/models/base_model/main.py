@@ -88,7 +88,7 @@ def baseline_model(params, gpu):
         tail_sizes = params.tail_sizes
         logger.info(f"openmax: tail_sizes {tail_sizes}")
 
-        distance_multpls = params.distance_multpls
+        distance_multpls = params.distance_multipls
         logger.info(f"openmax: distance_multpls {distance_multpls}")
 
         for alpha in params.alphas:
@@ -116,7 +116,6 @@ def baseline_model(params, gpu):
                 save_oscr_values(
                     params.experiment_data_dir,
                     "base",
-                    1,
                     ccr_fpr_per_model,
                     alpha,
                     negative_fix,

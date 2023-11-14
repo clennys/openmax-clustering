@@ -238,7 +238,7 @@ def openmax_alpha(
         sorted_activations = value_shift(sorted_activations)
 
     # Line 5
-    elif negative_fix == "ABS_REV_ACTV":
+    if negative_fix == "ABS_REV_ACTV":
         # logger.debug(f"sorted actv [L:5]: {sorted_activations[0]} weights: {weights[0]}")
         revisted_activations = multiply_tensors_with_sign(sorted_activations, weights)
         # logger.debug(f"Revisted actv [L:5]: {revisted_activations[0]}")
@@ -247,7 +247,7 @@ def openmax_alpha(
     # logger.debug(f"Dtypes => sorted actv {sorted_activations.dtype}, weights {weights.dtype}, rev act {revisted_activations.dtype}, ones {torch.ones(size=revisted_activations.shape).dtype}")
 
     # Line 6
-    unknowness_class_prob = torch.sum(sorted_activations * (1 - weights)/5, dim=1)
+    unknowness_class_prob = torch.sum(sorted_activations * (1 - weights), dim=1)
     revisted_activations = torch.scatter(
         torch.ones(revisted_activations.shape, dtype=torch.float64), 1, indices, revisted_activations
     )
