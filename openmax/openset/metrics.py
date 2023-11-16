@@ -76,10 +76,12 @@ def clusters_to_class(clusters_dict, num_clusters_per_class):
     return condensed_cluster_to_class
 
 
-def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_class=1, max_condense=True):
+def known_unknown_acc(
+    openmax_predictions_per_model, alpha, num_clusters_per_class=1, max_condense=True
+):
     acc_per_model = {}
     if max_condense:
-        num_clusters_per_class=1
+        num_clusters_per_class = 1
     for key in openmax_predictions_per_model:
         logger.debug(f" ======= {key} - {alpha} ====== ")
         knowns_acc = [0, 0]
@@ -108,7 +110,6 @@ def known_unknown_acc(openmax_predictions_per_model, alpha, num_clusters_per_cla
         )
         acc_per_model[key] = accuracy
     return acc_per_model
-        
 
 
 def ccr_fpr_plot(ccr_fpr_per_model):
@@ -136,7 +137,14 @@ def oscr(openmax_scores_per_model):
 
 
 def save_oscr_values(
-    path, model_type, oscr_dict, alpha, negative_fix, acc_per_model, cluster_input = 1, cluster_feature=1
+    path,
+    model_type,
+    oscr_dict,
+    alpha,
+    negative_fix,
+    acc_per_model,
+    cluster_input=1,
+    cluster_feature=1,
 ):
     file_ = (
         path

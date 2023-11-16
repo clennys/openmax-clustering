@@ -1,7 +1,6 @@
 import argparse
 
 
-
 def args_setup():
     parser = argparse.ArgumentParser(
         prog="CNN with MNIST and OpenMax",

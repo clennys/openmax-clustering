@@ -61,7 +61,9 @@ def baseline_model(params, gpu):
 
     learning_rate = params.learning_rate
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=params.momentum)
+    optimizer = torch.optim.SGD(
+        model.parameters(), lr=learning_rate, momentum=params.momentum
+    )
 
     path_model = params.saved_models_dir + "openmax_cnn_eminst0.pth"
 
@@ -91,6 +93,8 @@ def baseline_model(params, gpu):
         distance_multpls = params.distance_multipls
         logger.info(f"openmax: distance_multpls {distance_multpls}")
 
+        normalize_factor = params.normalize_factor
+
         for alpha in params.alphas:
             for negative_fix in params.negative_fix:
                 logger.info(f"Negative shift: {negative_fix}")
@@ -107,9 +111,10 @@ def baseline_model(params, gpu):
                     test_logits_dict,
                     alpha,
                     negative_fix,
+                    normalize_factor,
                 )
 
-                known_unknown_acc(openmax_predictions_per_model, alpha)
+                acc_per_model = known_unknown_acc(openmax_predictions_per_model, alpha)
 
                 ccr_fpr_per_model = oscr(openmax_scores_per_model)
 
@@ -119,4 +124,5 @@ def baseline_model(params, gpu):
                     ccr_fpr_per_model,
                     alpha,
                     negative_fix,
+                    acc_per_model,
                 )

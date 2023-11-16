@@ -10,6 +10,7 @@ from openset.metrics import *
 from util.Hyperparameters import *
 from loguru import logger
 
+
 def init_datasets(params, cluster_per_class=1):
     train_data = EMNIST(
         dataset_root=params.emnist_dir,
@@ -37,6 +38,44 @@ def init_datasets(params, cluster_per_class=1):
     return train_data, validation_data, test_data
 
 
+def get_type(params):
+    model_type = params.type
+    if model_type == "validation-features-cluster":
+        input_clustering, validation_features_cluster, training_features_clustering = (
+            False,
+            True,
+            False,
+        )
+    elif model_type == "training-features-cluster":
+        input_clustering, validation_features_cluster, training_features_clustering = (
+            False,
+            False,
+            True,
+        )
+    elif model_type == "input-cluster":
+        input_clustering, validation_features_cluster, training_features_clustering = (
+            True,
+            False,
+            False,
+        )
+    elif model_type == "input-validation-features-cluster":
+        input_clustering, validation_features_cluster, training_features_clustering = (
+            True,
+            True,
+            False,
+        )
+    elif model_type == "input-training-features-cluster":
+        input_clustering, validation_features_cluster, training_features_clustering = (
+            True,
+            False,
+            True,
+        )
+    else:
+        raise Exception("Undefined Model-Cluster Type")
+
+    return input_clustering, validation_features_cluster, training_features_clustering
+
+
 def init_dataloader(train_data, validation_data, test_data, batch_size):
     train_data_loader = torch.utils.data.DataLoader(
         train_data,
@@ -56,6 +95,7 @@ def init_dataloader(train_data, validation_data, test_data, batch_size):
 
     return train_data_loader, val_data_loader, test_data_loader
 
+
 def tensor_dict_to_cpu(tensors_dict):
     if torch.cuda.is_available():
         for key in tensors_dict:
@@ -63,21 +103,19 @@ def tensor_dict_to_cpu(tensors_dict):
     return tensors_dict
 
 
-
-def cluster_model(params, gpu, input_clustering, feature_clustering):
-    if not input_clustering and not feature_clustering:
-        raise Exception(
-            "Need to specify at least one clusering option, otherwise select the base model."
-        )
+def cluster_model(params, gpu):
+    (
+        input_clustering,
+        validation_features_clustering,
+        training_features_clustering,
+    ) = get_type(params)
 
     device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
 
     for n_clusters_per_class_input in params.num_clusters_per_class_input:
         total_n_clusters = n_clusters_per_class_input * 10 if input_clustering else 10
 
-        logger.info(
-            f"Using Cluster Model with Input Clustering={input_clustering} and Feature Clustering={feature_clustering}"
-        )
+        logger.info(f"Using Cluster Model: {params.type}")
 
         if input_clustering:
             train_data, validation_data, test_data = init_datasets(
@@ -131,7 +169,7 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                 validation_data_loader,
                 n_clusters_per_class_input,
                 path_model,
-                feature_clustering,
+                validation_features_clustering,
                 device,
             )
 
@@ -152,12 +190,16 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
             logger.info(f"openmax: distance_multpls {distance_multpls}")
 
             negative_fix = params.negative_fix[0]
+            normalize_factor = params.normalize_factor
 
-            openmax_training_data = val_features_dict if feature_clustering else training_features_dict
+            openmax_training_data = (
+                val_features_dict
+                if validation_features_clustering
+                else training_features_dict
+            )
 
             for n_clusters_per_class_features in params.num_clusters_per_class_features:
                 for alpha in params.alphas:
-
                     (
                         _,
                         _,
@@ -171,14 +213,15 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                         tensor_dict_to_cpu(test_logits_dict),
                         alpha,
                         negative_fix,
+                        normalize_factor,
                         n_clusters_per_class_input,
                         n_clusters_per_class_features,
                     )
 
                     acc_per_model = known_unknown_acc(
                         openmax_predictions_per_model,
-                          alpha,
-                          n_clusters_per_class_input, 
+                        alpha,
+                        n_clusters_per_class_input,
                     )
 
                     ccr_fpr_per_model = oscr(openmax_scores_per_model)
@@ -191,5 +234,5 @@ def cluster_model(params, gpu, input_clustering, feature_clustering):
                         negative_fix,
                         acc_per_model,
                         n_clusters_per_class_input,
-                        n_clusters_per_class_features
+                        n_clusters_per_class_features,
                     )

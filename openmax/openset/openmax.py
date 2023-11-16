@@ -26,8 +26,9 @@ def cosine_pairwisedistance(x, y):
 
 def multiply_tensors_with_sign(sorted_activations, weights):
     mask = sorted_activations < 0
-    weights[mask] = 2  - weights[mask]
+    weights[mask] = 2 - weights[mask]
     return sorted_activations * weights
+
 
 def value_shift(sorted_activations):
     min_values = torch.min(sorted_activations, dim=1).values
@@ -71,11 +72,11 @@ def openmax_run(
     openmax_inference_features_dict: dict,
     openmax_alpha_logits_dict: dict,
     alpha: int,
-    negative_fix,
-    n_clusters_per_class_input=1,
-    n_clusters_per_class_features=1,
+    negative_fix: str,
+    normalize_factor: str,
+    n_clusters_per_class_input: int = 1,
+    n_clusters_per_class_features: int = 1,
 ):
-
     feature_clustering = n_clusters_per_class_features > 1
     input_clustering = n_clusters_per_class_input > 1
 
@@ -92,22 +93,31 @@ def openmax_run(
             models_dict[key] = model_
 
     models_props_dict = {}
-    total_num_clusters = n_clusters_per_class_features if feature_clustering else n_clusters_per_class_input
+    total_num_clusters = (
+        n_clusters_per_class_features
+        if feature_clustering
+        else n_clusters_per_class_input
+    )
     for key in models_dict.keys():
         props_dict: dict = openmax_inference(
             openmax_inference_features_dict, models_dict[key], total_num_clusters * 10
         )
 
         if feature_clustering:
-            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class_features)
+            props_dict = max_entry_for_each_cluster(
+                props_dict, n_clusters_per_class_features
+            )
         elif input_clustering:
-            props_dict = max_entry_for_each_cluster(props_dict, n_clusters_per_class_input)
+            props_dict = max_entry_for_each_cluster(
+                props_dict, n_clusters_per_class_input
+            )
 
         models_props_dict[key] = props_dict
 
     if input_clustering:
-        openmax_alpha_logits_dict = max_entry_for_each_cluster(openmax_alpha_logits_dict, n_clusters_per_class_input)
-
+        openmax_alpha_logits_dict = max_entry_for_each_cluster(
+            openmax_alpha_logits_dict, n_clusters_per_class_input
+        )
 
     openmax_models_scores = {}
     openmax_models_predictions = {}
@@ -125,9 +135,9 @@ def openmax_run(
             openmax_predictions_dict[key], _, openmax_scores_dict[key] = openmax_alpha(
                 models_props_dict[model_idx][key],
                 openmax_alpha_logits_dict[key],
-                alpha=alpha,
-                negative_fix=negative_fix,
-                ignore_unknown_class=False,
+                alpha,
+                negative_fix,
+                normalize_factor,
             )
 
         openmax_models_scores[model_idx] = openmax_scores_dict
@@ -173,7 +183,7 @@ def openmax_inference(
     features_all_classes: dict, model_, total_num_clusters
 ) -> dict:  # dict[str, Tensor],
     props_dict: dict = {}
-    for class_label in features_all_classes: 
+    for class_label in features_all_classes:
         features = features_all_classes[class_label]
         probs = []
         # for model_label in sorted(model_.keys()):
@@ -199,7 +209,7 @@ def openmax_alpha(
     activations: Tensor,
     alpha: int,
     negative_fix=None,
-    ignore_unknown_class=False,
+    normalize_factor_unknowness_prob=None,
 ):
     # Convert to Unknowness
     per_class_unknownness_prob = 1 - evt_probs
@@ -215,16 +225,8 @@ def openmax_alpha(
     # Creating a sequence of integers from 1 to alpha (inclusive) with a stepsize 1
     # Sequence is assigned to the first alpha columns of all rows in weights
     if alpha == -1:
-        # logger.debug(f"weights [L:1]: {weights[0]}")
-
-        # Subtracts the current value in these position alhpa and then divides the result by alpha (elementwise)
-        weights= 1 - weights * torch.gather(
-            per_class_unknownness_prob, 1, indices
-        )
-        # logger.debug(f"weights [L:2-4]: {weights[0]}\n, indices {indices[0]}\n unkn per class {per_class_unknownness_prob[0]}")
-
+        weights = 1 - weights * torch.gather(per_class_unknownness_prob, 1, indices)
     else:
-
         weights[:, :alpha] = torch.arange(1, alpha + 1, step=1)
 
         # Subtracts the current value in these position alhpa and then divides the result by alpha (elementwise)
@@ -234,24 +236,42 @@ def openmax_alpha(
             per_class_unknownness_prob, 1, indices[:, :alpha]
         )
 
+    # Line 5
     if negative_fix == "VALUE_SHIFT":
         sorted_activations = value_shift(sorted_activations)
 
-    # Line 5
-    if negative_fix == "ABS_REV_ACTV":
-        # logger.debug(f"sorted actv [L:5]: {sorted_activations[0]} weights: {weights[0]}")
+        revisted_activations = sorted_activations * weights
+        unknowness_class_revisted_activations = sorted_activations * (1 - weights)
+
+    elif negative_fix == "ABS_REV_ACTV":
         revisted_activations = multiply_tensors_with_sign(sorted_activations, weights)
-        # logger.debug(f"Revisted actv [L:5]: {revisted_activations[0]}")
+
+        unknowness_class_revisted_activations = multiply_tensors_with_sign(
+            sorted_activations, 1 - weights
+        )
+
     else:
         revisted_activations = sorted_activations * weights
-    # logger.debug(f"Dtypes => sorted actv {sorted_activations.dtype}, weights {weights.dtype}, rev act {revisted_activations.dtype}, ones {torch.ones(size=revisted_activations.shape).dtype}")
+
+        unknowness_class_revisted_activations = sorted_activations * (1 - weights)
+
+    if normalize_factor_unknowness_prob == "class":
+        normalize_factor = 1 / 9
+    elif normalize_factor_unknowness_prob == "norm":
+        normalize_factor = 1 / torch.sum((1 - weights), dim=1)
+    else:
+        normalize_factor = 1
 
     # Line 6
-    unknowness_class_prob = torch.sum(sorted_activations * (1 - weights), dim=1)
-    revisted_activations = torch.scatter(
-        torch.ones(revisted_activations.shape, dtype=torch.float64), 1, indices, revisted_activations
+    unknowness_class_prob = normalize_factor * torch.sum(
+        unknowness_class_revisted_activations, dim=1
     )
-    # logger.debug(f"Revisted actv [L:6]: {revisted_activations[0]}")
+    revisted_activations = torch.scatter(
+        torch.ones(revisted_activations.shape, dtype=torch.float64),
+        1,
+        indices,
+        revisted_activations,
+    )
 
     probability_vector = torch.cat(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
@@ -260,10 +280,8 @@ def openmax_alpha(
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)
 
-    if ignore_unknown_class:
-        probs_kkc = probability_vector[:, 1:].clone().detach()
-        assert probs_kkc.shape == activations.shape
-        return probs_kkc
+    probs_kkc = probability_vector[:, 1:].clone().detach()
+    assert probs_kkc.shape == activations.shape
 
     # Line 8
     prediction_score, predicted_class = torch.max(probability_vector, dim=1)
@@ -272,4 +290,4 @@ def openmax_alpha(
     prediction_score[predicted_class == 0] = -1.0
     predicted_class = predicted_class - 1
 
-    return predicted_class, prediction_score, probability_vector[:, 1:].clone().detach()
+    return predicted_class, prediction_score, probs_kkc
