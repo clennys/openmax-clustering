@@ -20,7 +20,7 @@ negative_fix: ["VALUE_SHIFT", "ABS_REV_ACTV"]
 # negative_fix: ["VALUE_SHIFT"] # ["Original"]  ["VALUE_SHIFT"], ["ABS_REV_ACTV"]
 # negative_fix: ["ABS_REV_ACTV" , "Original"]  ["VALUE_SHIFT"], ["ABS_REV_ACTV"]
 
-normalize_factor: "NORM-WEIGHTS" # NONE, WEIGHTS, N-CLASSES, NORM-WEIGHTS
+normalize_factor: "N-CLASSES" # NONE, WEIGHTS, N-CLASSES, NORM-WEIGHTS
 
 logger_output: true
 train_only: false
