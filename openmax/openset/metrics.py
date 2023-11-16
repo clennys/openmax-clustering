@@ -143,12 +143,13 @@ def save_oscr_values(
     alpha,
     negative_fix,
     acc_per_model,
+    normalize_factor,
     cluster_input=1,
     cluster_feature=1,
 ):
     file_ = (
         path
-        + f"oscr_data_{model_type}_{cluster_input}_{cluster_feature}_{alpha}_{negative_fix}.pkl"
+        + f"oscr_data_{model_type}_{cluster_input}_{cluster_feature}_{alpha}_{negative_fix}_{normalize_factor}.pkl"
     )
     with open(file_, "wb") as f:
         pickle.dump((oscr_dict, acc_per_model), f)

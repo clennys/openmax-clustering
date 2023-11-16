@@ -125,4 +125,5 @@ def baseline_model(params, gpu):
                     alpha,
                     negative_fix,
                     acc_per_model,
+                    normalize_factor
                 )
