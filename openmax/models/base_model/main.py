@@ -8,6 +8,7 @@ from models.base_model.model import LeNet
 from openset.openmax import *
 from openset.metrics import *
 from loguru import logger
+from util.util import tensor_dict_to_cpu
 
 
 def baseline_model(params, gpu):
@@ -106,9 +107,9 @@ def baseline_model(params, gpu):
                 ) = openmax_run(
                     tail_sizes,
                     distance_multpls,
-                    training_features_dict,
-                    test_features_dict,
-                    test_logits_dict,
+                    tensor_dict_to_cpu(training_features_dict),
+                    tensor_dict_to_cpu(test_features_dict),
+                    tensor_dict_to_cpu(test_logits_dict),
                     alpha,
                     negative_fix,
                     normalize_factor,

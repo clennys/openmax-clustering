@@ -9,6 +9,7 @@ from openset.openmax import *
 from openset.metrics import *
 from util.Hyperparameters import *
 from loguru import logger
+from util.util import tensor_dict_to_cpu
 
 
 def init_datasets(params, cluster_per_class=1):
@@ -94,13 +95,6 @@ def init_dataloader(train_data, validation_data, test_data, batch_size):
     )
 
     return train_data_loader, val_data_loader, test_data_loader
-
-
-def tensor_dict_to_cpu(tensors_dict):
-    if torch.cuda.is_available():
-        for key in tensors_dict:
-            tensors_dict[key] = tensors_dict[key].cpu()
-    return tensors_dict
 
 
 def cluster_model(params, gpu):

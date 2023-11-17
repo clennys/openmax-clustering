@@ -1,4 +1,5 @@
 import argparse
+import torch
 
 
 def args_setup():
@@ -13,3 +14,10 @@ def args_setup():
     parser.add_argument("filename", help="Path to config yaml file")
 
     return parser
+
+def tensor_dict_to_cpu(tensors_dict):
+    if torch.cuda.is_available():
+        for key in tensors_dict:
+            tensors_dict[key] = tensors_dict[key].cpu()
+    return tensors_dict
+
