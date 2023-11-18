@@ -218,16 +218,29 @@ def cluster_model(params, gpu):
                         n_clusters_per_class_input,
                     )
 
-                    ccr_fpr_per_model = oscr(openmax_scores_per_model)
-
-                    save_oscr_values(
-                        params.experiment_data_dir,
-                        params.type,
-                        ccr_fpr_per_model,
-                        alpha,
-                        negative_fix,
-                        acc_per_model,
-                        normalize_factor,
-                        n_clusters_per_class_input,
-                        n_clusters_per_class_features,
+                    preprocess_ccr_fpr = wrapper_preprocess_oscr(
+                        openmax_scores_per_model
                     )
+
+                    ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
+
+                    gamma_score = oscr_confidence(preprocess_ccr_fpr)
+
+                    epsilon_score = oscr_epsilon_metric(
+                        preprocess_ccr_fpr, params.thresholds
+                    )
+
+                    results_dict = {
+                        "ACC": acc_per_model,
+                        "CCR-FPR": ccr_fpr_per_model,
+                        "GAMMA": gamma_score,
+                        "EPSILON": epsilon_score,
+                        "ALPHA": alpha,
+                        "N-FIX": negative_fix,
+                        "MODEL-TYPE": params.type,
+                        "NORM-FACTOR": params.type,
+                        "INPUT-CLUSTER": n_clusters_per_class_input,
+                        "FEATURES-CLUSTER": n_clusters_per_class_features,
+                    }
+
+                    save_oscr_values(params.experiment_data_dir, results_dict)

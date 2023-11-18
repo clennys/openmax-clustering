@@ -5,6 +5,15 @@ import pickle
 from loguru import logger
 
 
+def wrapper_preprocess_oscr(openmax_scores_per_model):
+    processed_oscr_openmax_scores_per_model: dict = {}
+    for model_key in openmax_scores_per_model.keys():
+        processed_oscr_openmax_scores_per_model[model_key] = preprocess_oscr(
+            openmax_scores_per_model[model_key]
+        )
+    return processed_oscr_openmax_scores_per_model
+
+
 def preprocess_oscr(class_scores_dict: dict):
     all_probs_per_model = []
     gt = []
@@ -112,7 +121,7 @@ def known_unknown_acc(
     return acc_per_model
 
 
-def oscr_confidence(gt, scores, unknown_label=-1):
+def calculate_gamma_confidence(gt, scores, unknown_label=-1):
     knowns = gt >= 0
     n_knowns = np.sum(knowns)
 
@@ -121,26 +130,38 @@ def oscr_confidence(gt, scores, unknown_label=-1):
 
     scores_unknown_samples = scores[unknowns]
 
-    gamma_negative = 1/n_unknowns * np.sum(1 - np.max(scores_unknown_samples, axis=1))
+    gamma_negative = 1 / n_unknowns * np.sum(1 - np.max(scores_unknown_samples, axis=1))
 
     known_scores = scores[knowns]
-    scores_gt =  known_scores[np.arange(known_scores.shape[0]), gt[knowns]]
+    scores_gt = known_scores[np.arange(known_scores.shape[0]), gt[knowns]]
 
-    gamma_positive = 1/n_knowns * np.sum(scores_gt)
+    gamma_positive = 1 / n_knowns * np.sum(scores_gt)
 
     gamma = (gamma_positive + gamma_negative) * 0.5
 
     return gamma, gamma_positive, gamma_negative
 
+
 def oscr_epsilon_ccr_at_fpr(ccr, fpr, fpr_thresholds):
     threshold_values = []
     for threshold in fpr_thresholds:
-        idx = np.where(fpr==threshold)
+        idx = np.where(fpr == threshold)
         value = ccr[idx]
-        if value.shape[0] == 0: 
+        if value.shape[0] == 0:
             value = np.append(value, 0.0)
         threshold_values.append((threshold, value))
     return np.sum([t[1] for t in threshold_values]), threshold_values
+
+
+def oscr_epsilon_metric(openmax_scores_per_model, thresholds):
+    epsilon_metrics = {}
+    for key in openmax_scores_per_model.keys():
+        epsilon_metrics[key] = oscr_epsilon_ccr_at_fpr(
+            openmax_scores_per_model[key][0],
+            openmax_scores_per_model[key][1],
+            thresholds,
+        )
+    return epsilon_metrics
 
 
 def ccr_fpr_plot(ccr_fpr_per_model):
@@ -151,37 +172,31 @@ def ccr_fpr_plot(ccr_fpr_per_model):
     plt.show()
 
 
-def oscr(openmax_scores_per_model):
-    processed_oscr_openmax_scores_per_model: dict = {}
-    for model_key in openmax_scores_per_model.keys():
-        processed_oscr_openmax_scores_per_model[model_key] = preprocess_oscr(
-            openmax_scores_per_model[model_key]
-        )
-
+def oscr(oscr_openmax_scores_per_model):
     ccr_fpr_per_model: dict = {}
-    for model_key in processed_oscr_openmax_scores_per_model.keys():
+    for model_key in oscr_openmax_scores_per_model.keys():
         ccr_fpr_per_model[model_key] = calculate_oscr(
-            processed_oscr_openmax_scores_per_model[model_key][0],
-            processed_oscr_openmax_scores_per_model[model_key][1],
+            oscr_openmax_scores_per_model[model_key][0],
+            oscr_openmax_scores_per_model[model_key][1],
         )
     return ccr_fpr_per_model
 
 
-def save_oscr_values(
-    path,
-    model_type,
-    oscr_dict,
-    alpha,
-    negative_fix,
-    acc_per_model,
-    normalize_factor,
-    cluster_input=1,
-    cluster_feature=1,
-):
+def oscr_confidence(oscr_openmax_scores_per_model):
+    oscr_confidence_dict = {}
+    for key in oscr_openmax_scores_per_model.keys():
+        oscr_confidence_dict[key] = calculate_gamma_confidence(
+            oscr_openmax_scores_per_model[key][0],
+            oscr_openmax_scores_per_model[key][1],
+        )
+    return oscr_confidence_dict
+
+
+def save_oscr_values(path, result_dict):
     file_ = (
         path
-        + f"oscr_data_{model_type}_{cluster_input}_{cluster_feature}_{alpha}_{negative_fix}_{normalize_factor}.pkl"
+        + f"oscr_data_{result_dict['MODEL-TYPE']}_{result_dict['INPUT-CLUSTER']}_{result_dict['FEATURES-CLUSTER']}_{result_dict['ALPHA']}_{result_dict['N-FIX']}_{result_dict['NORM-FACTOR']}.pkl"
     )
     with open(file_, "wb") as f:
-        pickle.dump((oscr_dict, acc_per_model), f)
+        pickle.dump(result_dict, f)
     logger.info(f"OSCR Data saved as {file_}.")

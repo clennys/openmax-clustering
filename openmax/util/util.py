@@ -15,9 +15,9 @@ def args_setup():
 
     return parser
 
+
 def tensor_dict_to_cpu(tensors_dict):
     if torch.cuda.is_available():
         for key in tensors_dict:
             tensors_dict[key] = tensors_dict[key].cpu()
     return tensors_dict
-

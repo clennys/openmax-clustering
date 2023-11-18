@@ -117,14 +117,27 @@ def baseline_model(params, gpu):
 
                 acc_per_model = known_unknown_acc(openmax_predictions_per_model, alpha)
 
-                ccr_fpr_per_model = oscr(openmax_scores_per_model)
+                preprocess_ccr_fpr = wrapper_preprocess_oscr(openmax_scores_per_model)
 
-                save_oscr_values(
-                    params.experiment_data_dir,
-                    "base",
-                    ccr_fpr_per_model,
-                    alpha,
-                    negative_fix,
-                    acc_per_model,
-                    normalize_factor
+                ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
+
+                gamma_score = oscr_confidence(preprocess_ccr_fpr)
+
+                epsilon_score = oscr_epsilon_metric(
+                    preprocess_ccr_fpr, params.thresholds
                 )
+
+                results_dict = {
+                    "ACC": acc_per_model,
+                    "CCR-FPR": ccr_fpr_per_model,
+                    "GAMMA": gamma_score,
+                    "EPSILON": epsilon_score,
+                    "ALPHA": alpha,
+                    "N-FIX": negative_fix,
+                    "MODEL-TYPE": params.type,
+                    "NORM-FACTOR": params.type,
+                    "INPUT-CLUSTER": 1,
+                    "FEATURES-CLUSTER": 1,
+                }
+
+                save_oscr_values(params.experiment_data_dir, results_dict)

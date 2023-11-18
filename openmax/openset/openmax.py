@@ -29,6 +29,7 @@ def adjust_weights_for_negative_actv(sorted_activations, weights):
     weights[mask] = 2 - weights[mask]
     return weights
 
+
 def value_shift(sorted_activations):
     min_values = torch.min(sorted_activations, dim=1).values
     min_values_reshaped = min_values.view(-1, 1)
@@ -243,10 +244,12 @@ def openmax_alpha(
         unknowness_class_revisted_activations = sorted_activations * (1 - weights)
 
     elif negative_fix == "ABS_REV_ACTV":
-        adjusted_weights= adjust_weights_for_negative_actv(sorted_activations, weights)
+        adjusted_weights = adjust_weights_for_negative_actv(sorted_activations, weights)
         revisted_activations = sorted_activations * adjusted_weights
 
-        unknowness_class_revisted_activations = sorted_activations * (1-adjusted_weights)
+        unknowness_class_revisted_activations = sorted_activations * (
+            1 - adjusted_weights
+        )
 
     else:
         revisted_activations = sorted_activations * weights
@@ -269,7 +272,6 @@ def openmax_alpha(
         unknowness_class_revisted_activations, dim=1
     )
 
-
     revisted_activations = torch.scatter(
         torch.ones(revisted_activations.shape, dtype=torch.float64),
         1,
@@ -283,7 +285,6 @@ def openmax_alpha(
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)
-
 
     probs_kkc = probability_vector[:, 1:].clone().detach()
     assert probs_kkc.shape == activations.shape
