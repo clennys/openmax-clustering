@@ -17,7 +17,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/openmax/main.py",
-            "args" : ["./configs/params_base.yaml"],
+            "args" : ["./configs/base/params_base_nv_cl.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

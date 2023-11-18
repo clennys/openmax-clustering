@@ -157,8 +157,8 @@ def oscr_epsilon_metric(openmax_scores_per_model, thresholds):
     epsilon_metrics = {}
     for key in openmax_scores_per_model.keys():
         epsilon_metrics[key] = oscr_epsilon_ccr_at_fpr(
-            openmax_scores_per_model[key][0],
-            openmax_scores_per_model[key][1],
+            openmax_scores_per_model[key][1][0],
+            openmax_scores_per_model[key][1][1],
             thresholds,
         )
     return epsilon_metrics
