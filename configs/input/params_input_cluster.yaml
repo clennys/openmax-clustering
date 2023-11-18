@@ -1,0 +1,32 @@
+type: "input-cluster" # base, input-cluster feature-cluster, input-feature-cluster
+learning_rate: 0.01
+momentum: 0.9
+epochs: 1
+batch_size: 32
+
+num_clusters_per_class_features: [1]
+
+num_clusters_per_class_input: [5]
+
+
+alphas: [-1, 7, 10] 
+
+tail_sizes: [10, 50, 100, 500, 1000, 1500, 2000]
+distance_multipls: [1.25, 1.50, 1.7, 2.0, 2.3]
+
+
+negative_fix: ["ABS_REV_ACTV"] # , "VALUE_SHIFT", "ABS_REV_ACTV"]
+
+logger_output: true
+train_only: false
+
+log_dir: "./logs/"
+saved_models_dir: "./saved_models/"
+experiment_data_dir: "./experiment_data/"
+emnist_dir: "./downloads/"
+
+
+
+
+
+

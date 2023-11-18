@@ -24,11 +24,10 @@ def cosine_pairwisedistance(x, y):
     return distances
 
 
-def multiply_tensors_with_sign(sorted_activations, weights):
+def adjust_weights_for_negative_actv(sorted_activations, weights):
     mask = sorted_activations < 0
     weights[mask] = 2 - weights[mask]
-    return sorted_activations * weights
-
+    return weights
 
 def value_shift(sorted_activations):
     min_values = torch.min(sorted_activations, dim=1).values
@@ -244,19 +243,10 @@ def openmax_alpha(
         unknowness_class_revisted_activations = sorted_activations * (1 - weights)
 
     elif negative_fix == "ABS_REV_ACTV":
-        # logger.debug(f"Sorted activation {sorted_activations[0]}" )
-        # logger.debug(f"Weights {weights[0]}" )
+        adjusted_weights= adjust_weights_for_negative_actv(sorted_activations, weights)
+        revisted_activations = sorted_activations * adjusted_weights
 
-        revisted_activations = multiply_tensors_with_sign(sorted_activations, weights)
-        # logger.debug(f"Revisted activations {revisted_activations[0]}" )
-        # logger.debug(f"2ND Sorted activations {sorted_activations[0]}" )
-        # logger.debug(f"1 - Weights {1 - weights[0]}" )
-
-        unknowness_class_revisted_activations = multiply_tensors_with_sign(
-            sorted_activations, 1 - weights
-        )
-
-        # logger.debug(f"unknowness_class_activation {unknowness_class_revisted_activations[0]}" )
+        unknowness_class_revisted_activations = sorted_activations * (1-adjusted_weights)
 
     else:
         revisted_activations = sorted_activations * weights
@@ -268,11 +258,9 @@ def openmax_alpha(
         normalize_factor = 1 / 9
     elif normalize_factor_unknowness_prob == "WEIGHTS":
         normalize_factor = 1 / torch.sum((1 - weights), dim=1)
-        logger.debug(f"normilize factor {normalize_factor}")
     elif normalize_factor_unknowness_prob == "NORM-WEIGHTS":
         normalize_factor = 1 / torch.sum((1 - weights), dim=1)
         normalize_factor = torch.abs(normalize_factor)
-        logger.debug(f"normilize factor {normalize_factor}")
     else:
         normalize_factor = 1
 
@@ -281,7 +269,6 @@ def openmax_alpha(
         unknowness_class_revisted_activations, dim=1
     )
 
-    logger.debug(f"unknowness_class_prob {unknowness_class_prob}")
 
     revisted_activations = torch.scatter(
         torch.ones(revisted_activations.shape, dtype=torch.float64),
@@ -293,12 +280,10 @@ def openmax_alpha(
     probability_vector = torch.cat(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
     )
-    logger.debug(f"Prob Vec: {probability_vector}")
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)
 
-    logger.debug(f"Scores: {probability_vector}")
 
     probs_kkc = probability_vector[:, 1:].clone().detach()
     assert probs_kkc.shape == activations.shape
