@@ -268,10 +268,11 @@ def openmax_alpha(
         normalize_factor = 1 / 9
     elif normalize_factor_unknowness_prob == "WEIGHTS":
         normalize_factor = 1 / torch.sum((1 - weights), dim=1)
-        # logger.debug(f"normilize factor {normalize_factor[0]}")
+        logger.debug(f"normilize factor {normalize_factor}")
     elif normalize_factor_unknowness_prob == "NORM-WEIGHTS":
         normalize_factor = 1 / torch.sum((1 - weights), dim=1)
         normalize_factor = torch.abs(normalize_factor)
+        logger.debug(f"normilize factor {normalize_factor}")
     else:
         normalize_factor = 1
 

@@ -112,6 +112,37 @@ def known_unknown_acc(
     return acc_per_model
 
 
+def oscr_confidence(gt, scores, unknown_label=-1):
+    knowns = gt >= 0
+    n_knowns = np.sum(knowns)
+
+    unknowns = gt == unknown_label
+    n_unknowns = np.sum(unknowns)
+
+    scores_unknown_samples = scores[unknowns]
+
+    gamma_negative = 1/n_unknowns * np.sum(1 - np.max(scores_unknown_samples, axis=1))
+
+    known_scores = scores[knowns]
+    scores_gt =  known_scores[np.arange(known_scores.shape[0]), gt[knowns]]
+
+    gamma_positive = 1/n_knowns * np.sum(scores_gt)
+
+    gamma = (gamma_positive + gamma_negative) * 0.5
+
+    return gamma, gamma_positive, gamma_negative
+
+def oscr_epsilon_ccr_at_fpr(ccr, fpr, fpr_thresholds):
+    threshold_values = []
+    for threshold in fpr_thresholds:
+        idx = np.where(fpr==threshold)
+        value = ccr[idx]
+        if value.shape[0] == 0: 
+            value = np.append(value, 0.0)
+        threshold_values.append((threshold, value))
+    return np.sum([t[1] for t in threshold_values]), threshold_values
+
+
 def ccr_fpr_plot(ccr_fpr_per_model):
     fig, axs = plt.subplots(1, 1)
     for key in ccr_fpr_per_model.keys():
