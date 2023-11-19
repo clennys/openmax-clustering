@@ -135,7 +135,7 @@ def baseline_model(params, gpu):
                     "ALPHA": alpha,
                     "N-FIX": negative_fix,
                     "MODEL-TYPE": params.type,
-                    "NORM-FACTOR": params.type,
+                    "NORM-FACTOR": normalize_factor,
                     "INPUT-CLUSTER": 1,
                     "FEATURES-CLUSTER": 1,
                 }
