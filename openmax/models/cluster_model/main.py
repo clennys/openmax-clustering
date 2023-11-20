@@ -241,6 +241,8 @@ def cluster_model(params, gpu):
                         "NORM-FACTOR": params.type,
                         "INPUT-CLUSTER": n_clusters_per_class_input,
                         "FEATURES-CLUSTER": n_clusters_per_class_features,
+                        "TAILSIZES": tail_sizes,
+                        "DIST-MULT": distance_multpls,
                     }
 
                     save_oscr_values(params.experiment_data_dir, results_dict)

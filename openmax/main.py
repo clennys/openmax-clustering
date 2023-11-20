@@ -17,6 +17,7 @@ if __name__ == "__main__":
     args = args_setup().parse_args()
     params = Hyperparameters(args.filename)
     logger_setup(params.logger_output, params.type, params.log_dir)
+    logger.info(params.summary())
     if params.type == "base":
         baseline_model(params, args.gpu)
     else:

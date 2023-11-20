@@ -138,6 +138,8 @@ def baseline_model(params, gpu):
                     "NORM-FACTOR": normalize_factor,
                     "INPUT-CLUSTER": 1,
                     "FEATURES-CLUSTER": 1,
+                    "TAILSIZES": tail_sizes,
+                    "DIST-MULT": distance_multpls,
                 }
 
                 save_oscr_values(params.experiment_data_dir, results_dict)

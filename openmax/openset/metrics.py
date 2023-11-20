@@ -1,4 +1,5 @@
 import numpy as np
+import time
 import torch
 import matplotlib.pyplot as plt
 import pickle
@@ -131,11 +132,15 @@ def calculate_gamma_confidence(gt, scores, unknown_label=-1):
     scores_unknown_samples = scores[unknowns]
 
     gamma_negative = 1 / n_unknowns * np.sum(1 - np.max(scores_unknown_samples, axis=1))
+    if np.isnan(gamma_negative):
+        gamma_negative = 0.0
 
     known_scores = scores[knowns]
     scores_gt = known_scores[np.arange(known_scores.shape[0]), gt[knowns]]
 
     gamma_positive = 1 / n_knowns * np.sum(scores_gt)
+    if np.isnan(gamma_positive):
+        gamma_positive = 0.0
 
     gamma = (gamma_positive + gamma_negative) * 0.5
 
@@ -193,9 +198,18 @@ def oscr_confidence(oscr_openmax_scores_per_model):
 
 
 def save_oscr_values(path, result_dict):
+
     file_ = (
         path
-        + f"oscr_data_{result_dict['MODEL-TYPE']}_{result_dict['INPUT-CLUSTER']}_{result_dict['FEATURES-CLUSTER']}_{result_dict['ALPHA']}_{result_dict['N-FIX']}_{result_dict['NORM-FACTOR']}.pkl"
+        + "oscr_data_"
+        + f"{result_dict['MODEL-TYPE']}_"
+        + f"{result_dict['INPUT-CLUSTER']}_"
+        + f"{result_dict['FEATURES-CLUSTER']}_"
+        + f"{result_dict['ALPHA']}_"
+        + f"{result_dict['N-FIX']}_"
+        + f"{result_dict['NORM-FACTOR']}_"
+        + f"{time}"
+        + ".pkl"
     )
     with open(file_, "wb") as f:
         pickle.dump(result_dict, f)
