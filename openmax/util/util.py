@@ -1,5 +1,6 @@
 import argparse
 import torch
+from datetime import datetime
 
 
 def args_setup():
@@ -21,3 +22,9 @@ def tensor_dict_to_cpu(tensors_dict):
         for key in tensors_dict:
             tensors_dict[key] = tensors_dict[key].cpu()
     return tensors_dict
+
+def get_current_time_str():
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y_%H-%M")
+    return dt_string
+

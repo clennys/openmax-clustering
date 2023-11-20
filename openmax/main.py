@@ -9,7 +9,7 @@ import sys
 def logger_setup(debug_output: bool, model_name, path_dir):
     logger.remove()
     if debug_output:
-        logger.add(path_dir + model_name + "_debug_log_{time}.log", level="DEBUG")
+        logger.add(path_dir + model_name + f"_debug_log_{get_current_time_str()}.log", level="DEBUG")
     logger.add(sys.stderr, level="INFO")
 
 
@@ -18,6 +18,7 @@ if __name__ == "__main__":
     params = Hyperparameters(args.filename)
     logger_setup(params.logger_output, params.type, params.log_dir)
     logger.info(params.summary())
+    torch.set_default_dtype(torch.float32)
     if params.type == "base":
         baseline_model(params, args.gpu)
     else:

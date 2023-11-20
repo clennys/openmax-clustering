@@ -191,8 +191,9 @@ def openmax_inference(
             if model_label in model_:
                 mav: Tensor = model_[model_label]["mav"]
                 distances: Tensor = cosine_pairwisedistance(features, mav)
+                prob = model_[model_label]["weibull"].wscore(distances, isReversed=True)
                 probs.append(
-                    model_[model_label]["weibull"].wscore(distances, isReversed=True)
+                    prob.type(torch.float32)
                 )  # TODO: Reversed? 1 - weibull.cdf
             elif class_label == -1:
                 probs.append(torch.zeros(8800, 1))
@@ -216,7 +217,6 @@ def openmax_alpha(
 
     # Line 1: Sort for highest activation value
     sorted_activations, indices = torch.sort(activations, descending=True, dim=1)
-    sorted_activations = sorted_activations.double()
 
     # Create weights of ones in correct shape
     weights = torch.ones(activations.shape[0], activations.shape[1])
@@ -273,7 +273,7 @@ def openmax_alpha(
     )
 
     revisted_activations = torch.scatter(
-        torch.ones(revisted_activations.shape, dtype=torch.float64),
+        torch.ones(revisted_activations.shape),
         1,
         indices,
         revisted_activations,

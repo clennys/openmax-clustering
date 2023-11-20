@@ -3,6 +3,7 @@ import time
 import torch
 import matplotlib.pyplot as plt
 import pickle
+from util.util import get_current_time_str
 from loguru import logger
 
 
@@ -208,7 +209,7 @@ def save_oscr_values(path, result_dict):
         + f"{result_dict['ALPHA']}_"
         + f"{result_dict['N-FIX']}_"
         + f"{result_dict['NORM-FACTOR']}_"
-        + f"{time}"
+        + f"{get_current_time_str()}"
         + ".pkl"
     )
     with open(file_, "wb") as f:
