@@ -124,7 +124,7 @@ def baseline_model(params, gpu):
                 gamma_score = oscr_confidence(preprocess_ccr_fpr)
 
                 epsilon_score = oscr_epsilon_metric(
-                    preprocess_ccr_fpr, params.thresholds
+                    ccr_fpr_per_model, params.thresholds
                 )
 
                 results_dict = {

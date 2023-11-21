@@ -17,7 +17,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/openmax/main.py",
-            "args" : ["./configs/base/params_base_nv_weights.yaml"],
+            "args" : ["./configs/base/params_base_10_VALUE_SHIFT_4500-5000_4.75-5.75.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

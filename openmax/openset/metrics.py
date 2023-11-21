@@ -1,5 +1,4 @@
 import numpy as np
-import time
 import torch
 import matplotlib.pyplot as plt
 import pickle
@@ -159,12 +158,12 @@ def oscr_epsilon_ccr_at_fpr(ccr, fpr, fpr_thresholds):
     return np.sum([t[1] for t in threshold_values]), threshold_values
 
 
-def oscr_epsilon_metric(openmax_scores_per_model, thresholds):
+def oscr_epsilon_metric(ccr_fpr_per_model, thresholds):
     epsilon_metrics = {}
-    for key in openmax_scores_per_model.keys():
+    for key in ccr_fpr_per_model.keys():
         epsilon_metrics[key] = oscr_epsilon_ccr_at_fpr(
-            openmax_scores_per_model[key][1][0],
-            openmax_scores_per_model[key][1][1],
+            ccr_fpr_per_model[key][0],
+            ccr_fpr_per_model[key][1],
             thresholds,
         )
     return epsilon_metrics

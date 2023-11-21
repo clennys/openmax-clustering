@@ -243,7 +243,7 @@ def openmax_alpha(
         revisted_activations = sorted_activations * weights
         unknowness_class_revisted_activations = sorted_activations * (1 - weights)
 
-    elif negative_fix == "ABS_REV_ACTV":
+    elif negative_fix == "NEGATIVE_VALUE":
         adjusted_weights = adjust_weights_for_negative_actv(sorted_activations, weights)
         revisted_activations = sorted_activations * adjusted_weights
 
