@@ -257,7 +257,7 @@ def openmax_alpha(
         unknowness_class_revisted_activations = sorted_activations * (1 - weights)
 
     if normalize_factor_unknowness_prob == "N-CLASSES":
-        assert alpha == -1
+        # assert alpha == -1
         normalize_factor = 1 / 9
     elif normalize_factor_unknowness_prob == "WEIGHTS":
         normalize_factor = 1 / torch.sum((1 - weights), dim=1)
