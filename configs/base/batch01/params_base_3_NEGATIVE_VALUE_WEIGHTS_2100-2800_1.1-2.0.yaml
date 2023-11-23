@@ -1,0 +1,21 @@
+type: base
+learning_rate: 0.01
+momentum: 0.9
+epochs: 1
+batch_size: 32
+num_clusters_per_class_input: []
+num_clusters_per_class_features: []
+alphas: [3]
+tail_sizes: [2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800]
+distance_multipls: [1.1, 1.25, 1.5, 1.75, 2.0]
+negative_fix: ['NEGATIVE_VALUE']
+normalize_factor: WEIGHTS
+logger_output: true
+train_only: false
+eval_only: true
+log_dir: ./logs/
+saved_models_dir: ./saved_models/pytorch_models/
+saved_network_output_dir: ./saved_models/network_outputs/
+experiment_data_dir: ./experiment_data/
+emnist_dir: ./downloads/
+thresholds: [0.0001, 0.001, 0.01, 0.1, 0.3, 0.5, 0.7]
