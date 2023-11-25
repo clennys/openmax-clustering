@@ -12,7 +12,7 @@ from util.util import *
 
 
 def baseline_model(params, gpu):
-    model_name =  "openmax_cnn_eminst0"
+    model_name = "openmax_cnn_eminst0"
 
     if not params.eval_only:
         device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
@@ -93,9 +93,17 @@ def baseline_model(params, gpu):
                 model, test_data_loader, test_data, loss_fn, path_model, device=device
             )
 
-            saved_output_dict = (training_features_dict, val_features_dict, val_logits_dict, test_features_dict, test_logits_dict)
+            saved_output_dict = (
+                training_features_dict,
+                val_features_dict,
+                val_logits_dict,
+                test_features_dict,
+                test_logits_dict,
+            )
 
-            network_output_to_pkl(saved_output_dict, params.saved_network_output_dir, model_name)
+            network_output_to_pkl(
+                saved_output_dict, params.saved_network_output_dir, model_name
+            )
 
     else:
         (
@@ -112,7 +120,6 @@ def baseline_model(params, gpu):
 
     for alpha in params.alphas:
         for negative_fix in params.negative_fix:
-            logger.info(f"Negative shift: {negative_fix}")
             (
                 _,
                 _,
@@ -137,9 +144,7 @@ def baseline_model(params, gpu):
 
             gamma_score = oscr_confidence(preprocess_ccr_fpr)
 
-            epsilon_score = oscr_epsilon_metric(
-                ccr_fpr_per_model, params.thresholds
-            )
+            epsilon_score = oscr_epsilon_metric(ccr_fpr_per_model, params.thresholds)
 
             results_dict = {
                 "ACC": acc_per_model,

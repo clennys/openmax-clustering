@@ -144,6 +144,8 @@ def calculate_gamma_confidence(gt, scores, unknown_label=-1):
 
     gamma = (gamma_positive + gamma_negative) * 0.5
 
+    logger.debug(f"Gamma Score: {gamma}, +: {gamma_positive}, -: {gamma_negative}")
+
     return gamma, gamma_positive, gamma_negative
 
 
@@ -155,7 +157,10 @@ def oscr_epsilon_ccr_at_fpr(ccr, fpr, fpr_thresholds):
         if value.shape[0] == 0:
             value = np.append(value, 0.0)
         threshold_values.append((threshold, value))
-    return np.sum([t[1] for t in threshold_values]), threshold_values
+    epsilon_score = np.sum([t[1] for t in threshold_values])
+    logger.debug(f"Epsilon Score: {epsilon_score}, CCR at thershold {threshold_values}")
+
+    return epsilon_score, threshold_values
 
 
 def oscr_epsilon_metric(ccr_fpr_per_model, thresholds):
@@ -198,7 +203,6 @@ def oscr_confidence(oscr_openmax_scores_per_model):
 
 
 def save_oscr_values(path, result_dict):
-
     file_ = (
         path
         + "oscr_data_"

@@ -27,7 +27,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/openmax/main.py",
-            "args" : ["./configs/params_feature_cluster.yaml"],
+            "args" : ["./configs/validation-features/params_features.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
         },        

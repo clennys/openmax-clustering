@@ -14,4 +14,3 @@ class Hyperparameters:
             summary_str += f"{key}:\t{self.__dict__[key]}\n"
 
         return f"{' Selected Parameters '.center(90, '#')}\n{summary_str}\n{' Selected Parameters End '.center(90, '#')}"
-

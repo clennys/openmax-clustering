@@ -8,6 +8,7 @@ from models.base_model.model import LeNet
 from openset.openmax import *
 from openset.metrics import *
 from util.Hyperparameters import *
+from util.util import *
 from loguru import logger
 from util.util import tensor_dict_to_cpu
 
@@ -104,145 +105,162 @@ def cluster_model(params, gpu):
         training_features_clustering,
     ) = get_type(params)
 
-    device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
-
     for n_clusters_per_class_input in params.num_clusters_per_class_input:
         total_n_clusters = n_clusters_per_class_input * 10 if input_clustering else 10
 
-        logger.info(f"Using Cluster Model: {params.type}")
-
         if input_clustering:
-            train_data, validation_data, test_data = init_datasets(
-                params, n_clusters_per_class_input
-            )
+            model_name = f"openmax_cnn_eminst_cluster-{total_n_clusters}"
         else:
-            train_data, validation_data, test_data = init_datasets(params, 1)
+            model_name = "openmax_cnn_eminst0"
+        path_model = params.saved_models_dir + model_name + ".pth"
 
-        train_data_loader, validation_data_loader, test_data_loader = init_dataloader(
-            train_data, validation_data, test_data, params.batch_size
-        )
+        if not params.eval_only:
+            device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
 
-        cluster_model = LeNet(
-            use_classification_layer=True,
-            use_BG=False,
-            num_classes=total_n_clusters,
-            final_layer_bias=True,
-        )
+            if input_clustering:
+                train_data, validation_data, test_data = init_datasets(
+                    params, n_clusters_per_class_input
+                )
+            else:
+                train_data, validation_data, test_data = init_datasets(params, 1)
 
-        loss_fn = nn.CrossEntropyLoss()
-        optimizer = torch.optim.SGD(
-            cluster_model.parameters(),
-            lr=params.learning_rate,
-            momentum=params.momentum,
-        )
-
-        if input_clustering:
-            path_model = (
-                params.saved_models_dir
-                + f"openmax_cnn_eminst_cluster-{total_n_clusters}.pth"
-            )
-        else:
-            path_model = params.saved_models_dir + "openmax_cnn_eminst0.pth"
-
-        training_features_dict = train(
-            cluster_model,
-            train_data,
-            train_data_loader,
-            optimizer,
-            loss_fn,
-            params.epochs,
-            path_model,
-            input_clustering,
-            device,
-        )
-
-        if not params.train_only:
-            val_features_dict, val_logits_dict = validation(
-                cluster_model,
-                validation_data,
+            (
+                train_data_loader,
                 validation_data_loader,
-                n_clusters_per_class_input,
-                path_model,
-                validation_features_clustering,
-                device,
-            )
-
-            test_features_dict, test_logits_dict = testing(
-                cluster_model,
-                test_data,
                 test_data_loader,
+            ) = init_dataloader(
+                train_data, validation_data, test_data, params.batch_size
+            )
+
+            cluster_model = LeNet(
+                use_classification_layer=True,
+                use_BG=False,
+                num_classes=total_n_clusters,
+                final_layer_bias=True,
+            )
+
+            loss_fn = nn.CrossEntropyLoss()
+            optimizer = torch.optim.SGD(
+                cluster_model.parameters(),
+                lr=params.learning_rate,
+                momentum=params.momentum,
+            )
+
+            training_features_dict = train(
+                cluster_model,
+                train_data,
+                train_data_loader,
+                optimizer,
                 loss_fn,
-                n_clusters_per_class_input,
+                params.epochs,
                 path_model,
+                input_clustering,
                 device,
             )
 
-            tail_sizes = params.tail_sizes
-            logger.info(f"openmax: tail_sizes {tail_sizes}")
+            if not params.train_only:
+                val_features_dict, val_logits_dict = validation(
+                    cluster_model,
+                    validation_data,
+                    validation_data_loader,
+                    n_clusters_per_class_input,
+                    path_model,
+                    validation_features_clustering,
+                    device,
+                )
 
-            distance_multpls = params.distance_multipls
-            logger.info(f"openmax: distance_multpls {distance_multpls}")
+                test_features_dict, test_logits_dict = testing(
+                    cluster_model,
+                    test_data,
+                    test_data_loader,
+                    loss_fn,
+                    n_clusters_per_class_input,
+                    path_model,
+                    device,
+                )
+                saved_output_dict = (
+                    training_features_dict,
+                    val_features_dict,
+                    val_logits_dict,
+                    test_features_dict,
+                    test_logits_dict,
+                )
 
-            negative_fix = params.negative_fix[0]
-            normalize_factor = params.normalize_factor
+                network_output_to_pkl(
+                    saved_output_dict, params.saved_network_output_dir, model_name
+                )
 
-            openmax_training_data = (
-                val_features_dict
-                if validation_features_clustering
-                else training_features_dict
-            )
+        else:
+            (
+                training_features_dict,
+                val_features_dict,
+                val_logits_dict,
+                test_features_dict,
+                test_logits_dict,
+            ) = load_network_output(params.saved_network_output_dir, model_name)
 
-            for n_clusters_per_class_features in params.num_clusters_per_class_features:
-                for alpha in params.alphas:
-                    (
-                        _,
-                        _,
-                        openmax_predictions_per_model,
-                        openmax_scores_per_model,
-                    ) = openmax_run(
-                        tail_sizes,
-                        distance_multpls,
-                        tensor_dict_to_cpu(openmax_training_data),
-                        tensor_dict_to_cpu(test_features_dict),
-                        tensor_dict_to_cpu(test_logits_dict),
-                        alpha,
-                        negative_fix,
-                        normalize_factor,
-                        n_clusters_per_class_input,
-                        n_clusters_per_class_features,
-                    )
+        tail_sizes = params.tail_sizes
+        distance_multpls = params.distance_multipls
+        negative_fix = params.negative_fix[0]
+        normalize_factor = params.normalize_factor
 
-                    acc_per_model = known_unknown_acc(
-                        openmax_predictions_per_model,
-                        alpha,
-                        n_clusters_per_class_input,
-                    )
+        openmax_training_data = (
+            val_features_dict
+            if validation_features_clustering
+            else training_features_dict
+        )
 
-                    preprocess_ccr_fpr = wrapper_preprocess_oscr(
-                        openmax_scores_per_model
-                    )
+        for (
+            n_clusters_per_class_features
+        ) in params.num_clusters_per_class_features:
+            for alpha in params.alphas:
+                (
+                    _,
+                    _,
+                    openmax_predictions_per_model,
+                    openmax_scores_per_model,
+                ) = openmax_run(
+                    tail_sizes,
+                    distance_multpls,
+                    tensor_dict_to_cpu(openmax_training_data),
+                    tensor_dict_to_cpu(test_features_dict),
+                    tensor_dict_to_cpu(test_logits_dict),
+                    alpha,
+                    negative_fix,
+                    normalize_factor,
+                    n_clusters_per_class_input,
+                    n_clusters_per_class_features,
+                )
 
-                    ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
+                acc_per_model = known_unknown_acc(
+                    openmax_predictions_per_model, alpha
+                )
 
-                    gamma_score = oscr_confidence(preprocess_ccr_fpr)
+                preprocess_ccr_fpr = wrapper_preprocess_oscr(
+                    openmax_scores_per_model
+                )
 
-                    epsilon_score = oscr_epsilon_metric(
-                        preprocess_ccr_fpr, params.thresholds
-                    )
+                ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
 
-                    results_dict = {
-                        "ACC": acc_per_model,
-                        "CCR-FPR": ccr_fpr_per_model,
-                        "GAMMA": gamma_score,
-                        "EPSILON": epsilon_score,
-                        "ALPHA": alpha,
-                        "N-FIX": negative_fix,
-                        "MODEL-TYPE": params.type,
-                        "NORM-FACTOR": params.type,
-                        "INPUT-CLUSTER": n_clusters_per_class_input,
-                        "FEATURES-CLUSTER": n_clusters_per_class_features,
-                        "TAILSIZES": tail_sizes,
-                        "DIST-MULT": distance_multpls,
-                    }
+                gamma_score = oscr_confidence(preprocess_ccr_fpr)
 
-                    save_oscr_values(params.experiment_data_dir, results_dict)
+                epsilon_score = oscr_epsilon_metric(
+                    ccr_fpr_per_model, params.thresholds
+                )
+
+                results_dict = {
+                    "ACC": acc_per_model,
+                    "CCR-FPR": ccr_fpr_per_model,
+                    "GAMMA": gamma_score,
+                    "EPSILON": epsilon_score,
+                    "ALPHA": alpha,
+                    "N-FIX": negative_fix,
+                    "MODEL-TYPE": params.type,
+                    "NORM-FACTOR": normalize_factor,
+                    "INPUT-CLUSTER": n_clusters_per_class_input,
+                    "FEATURES-CLUSTER": n_clusters_per_class_features,
+                    "TAILSIZES": tail_sizes,
+                    "DIST-MULT": distance_multpls,
+                }
+
+                save_oscr_values(params.experiment_data_dir, results_dict)

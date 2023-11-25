@@ -42,7 +42,7 @@ def val_features_clustering(features, num_cluster_pro_class):
     cluster_features_dict = {}
     for key in features.keys():
         clusterer = agglo_clustering(
-            num_cluster_pro_class, "ward", "euclidean", features[key].numpy()
+            num_cluster_pro_class, "ward", "euclidean", features[key].detach().numpy()
         )
         for cluster_label, values in zip(clusterer.labels_, features[key]):
             dict_key_cluster = key * num_cluster_pro_class + cluster_label
