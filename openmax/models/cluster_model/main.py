@@ -230,6 +230,7 @@ def cluster_model(params, gpu):
                     normalize_factor,
                     n_clusters_per_class_input,
                     n_clusters_per_class_features,
+                    training_features_clustering
                 )
 
                 acc_per_model = known_unknown_acc(
