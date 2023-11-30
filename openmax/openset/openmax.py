@@ -90,7 +90,7 @@ def openmax_run(
     for tail in tail_sizes:
         for dist_mult in distance_multpls:
             model_ = openmax_training(openmax_training_features_dict, dist_mult, tail)
-            key = f"{tail}-{dist_mult}"
+            key = f"{tail}-{dist_mult}-{n_clusters_per_class_input}-{n_clusters_per_class_features}"
             models_dict[key] = model_
 
     models_props_dict = {}
