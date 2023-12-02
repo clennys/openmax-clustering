@@ -207,6 +207,7 @@ def save_oscr_values(path, result_dict):
         path
         + "oscr_data_"
         + f"{result_dict['MODEL-TYPE']}_"
+        + f"{result_dict['DATASET']}_"
         + f"{result_dict['INPUT-CLUSTER']}_"
         + f"{result_dict['FEATURES-CLUSTER']}_"
         + f"{result_dict['ALPHA']}_"
