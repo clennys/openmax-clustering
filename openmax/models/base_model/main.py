@@ -156,51 +156,52 @@ def baseline_model(params, gpu):
             test_logits_dict,
         ) = load_network_output(params.saved_network_output_dir, model_name)
 
-    tail_sizes = params.tail_sizes
-    distance_multpls = params.distance_multipls
-    normalize_factor = params.normalize_factor
+    if not params.train_only:
+        tail_sizes = params.tail_sizes
+        distance_multpls = params.distance_multipls
+        normalize_factor = params.normalize_factor
 
-    for alpha in params.alphas:
-        for negative_fix in params.negative_fix:
-            (
-                _,
-                _,
-                openmax_predictions_per_model,
-                openmax_scores_per_model,
-            ) = openmax_run(
-                tail_sizes,
-                distance_multpls,
-                tensor_dict_to_cpu(training_features_dict),
-                tensor_dict_to_cpu(test_features_dict),
-                tensor_dict_to_cpu(test_logits_dict),
-                alpha,
-                negative_fix,
-                normalize_factor,
-            )
+        for alpha in params.alphas:
+            for negative_fix in params.negative_fix:
+                (
+                    _,
+                    _,
+                    openmax_predictions_per_model,
+                    openmax_scores_per_model,
+                ) = openmax_run(
+                    tail_sizes,
+                    distance_multpls,
+                    tensor_dict_to_cpu(training_features_dict),
+                    tensor_dict_to_cpu(test_features_dict),
+                    tensor_dict_to_cpu(test_logits_dict),
+                    alpha,
+                    negative_fix,
+                    normalize_factor,
+                )
 
-            acc_per_model = known_unknown_acc(openmax_predictions_per_model, alpha)
+                acc_per_model = known_unknown_acc(openmax_predictions_per_model, alpha)
 
-            preprocess_ccr_fpr = wrapper_preprocess_oscr(openmax_scores_per_model)
+                preprocess_ccr_fpr = wrapper_preprocess_oscr(openmax_scores_per_model)
 
-            ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
+                ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
 
-            gamma_score = oscr_confidence(preprocess_ccr_fpr)
+                gamma_score = oscr_confidence(preprocess_ccr_fpr)
 
-            epsilon_score = oscr_epsilon_metric(ccr_fpr_per_model, params.thresholds)
+                epsilon_score = oscr_epsilon_metric(ccr_fpr_per_model, params.thresholds)
 
-            results_dict = {
-                "ACC": acc_per_model,
-                "CCR-FPR": ccr_fpr_per_model,
-                "GAMMA": gamma_score,
-                "EPSILON": epsilon_score,
-                "ALPHA": alpha,
-                "N-FIX": negative_fix,
-                "MODEL-TYPE": params.type,
-                "NORM-FACTOR": normalize_factor,
-                "INPUT-CLUSTER": 1,
-                "FEATURES-CLUSTER": 1,
-                "TAILSIZES": tail_sizes,
-                "DIST-MULT": distance_multpls,
-            }
+                results_dict = {
+                    "ACC": acc_per_model,
+                    "CCR-FPR": ccr_fpr_per_model,
+                    "GAMMA": gamma_score,
+                    "EPSILON": epsilon_score,
+                    "ALPHA": alpha,
+                    "N-FIX": negative_fix,
+                    "MODEL-TYPE": params.type,
+                    "NORM-FACTOR": normalize_factor,
+                    "INPUT-CLUSTER": 1,
+                    "FEATURES-CLUSTER": 1,
+                    "TAILSIZES": tail_sizes,
+                    "DIST-MULT": distance_multpls,
+                }
 
-            save_oscr_values(params.experiment_data_dir, results_dict)
+                save_oscr_values(params.experiment_data_dir, results_dict)
