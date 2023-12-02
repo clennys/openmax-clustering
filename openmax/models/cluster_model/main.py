@@ -187,7 +187,9 @@ def cluster_model(params, gpu):
                 )
 
                 network_output_to_pkl(
-                    saved_output_dict, params.saved_network_output_dir, model_name + "SPECIAL"
+                    saved_output_dict,
+                    params.saved_network_output_dir,
+                    model_name + "SPECIAL",
                 )
 
         else:
@@ -210,9 +212,7 @@ def cluster_model(params, gpu):
             else training_features_dict
         )
 
-        for (
-            n_clusters_per_class_features
-        ) in params.num_clusters_per_class_features:
+        for n_clusters_per_class_features in params.num_clusters_per_class_features:
             for alpha in params.alphas:
                 (
                     _,
@@ -230,16 +230,12 @@ def cluster_model(params, gpu):
                     normalize_factor,
                     n_clusters_per_class_input,
                     n_clusters_per_class_features,
-                    training_features_clustering
+                    training_features_clustering,
                 )
 
-                acc_per_model = known_unknown_acc(
-                    openmax_predictions_per_model, alpha
-                )
+                acc_per_model = known_unknown_acc(openmax_predictions_per_model, alpha)
 
-                preprocess_ccr_fpr = wrapper_preprocess_oscr(
-                    openmax_scores_per_model
-                )
+                preprocess_ccr_fpr = wrapper_preprocess_oscr(openmax_scores_per_model)
 
                 ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
 

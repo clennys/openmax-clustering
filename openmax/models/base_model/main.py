@@ -6,10 +6,42 @@ from models.base_model.train import *
 from models.base_model.test import *
 from models.base_model.validation import *
 from models.base_model.model import LeNet, ResNet18
+from torch.utils.data.sampler import SubsetRandomSampler
 from openset.openmax import *
 from openset.metrics import *
 from loguru import logger
 from util.util import *
+
+
+def train_val_balanced_samplers(val_ratio, train_dataset):
+    n_samples_class = int(np.floor(len(train_dataset) * val_ratio / 10))
+
+    # Get all the targets from the dataset
+    targets = np.array(train_dataset.targets)
+
+    # Initialize lists to store the train and validation indices
+    train_indices = []
+    valid_indices = []
+
+    # For each class
+    for i in range(10):  # Assuming there are 10 classes in CIFAR10
+        # Get the indices for this class
+        class_indices = np.where(targets == i)[0]
+
+        # Randomly permute the indices
+        np.random.seed(0)
+        np.random.shuffle(class_indices)
+
+        # Split the indices into train and validation indices
+        train_indices.extend(class_indices[n_samples_class:])
+        valid_indices.extend(class_indices[:n_samples_class])
+
+    # Define samplers
+    train_sampler = SubsetRandomSampler(train_indices)
+    valid_sampler = SubsetRandomSampler(valid_indices)
+
+    return train_sampler, valid_sampler
+
 
 def init_datasets(params, cluster_per_class=1):
     if params.dataset == "EMNIST":
@@ -53,7 +85,7 @@ def init_datasets(params, cluster_per_class=1):
             which_set="test",
             include_unknown=True,
         )
-    else: 
+    else:
         raise Exception("Unable to find the dataset.")
 
     return train_data, validation_data, test_data
@@ -65,26 +97,29 @@ def baseline_model(params, gpu):
     else:
         model_name = "openmax_cnn_cifar0"
 
-    if not params.eval_only:
+    if params.run_model:
         device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
 
-        training_data, validation_data, test_data = init_datasets(
-                    params, 1
-                )
+        training_data, validation_data, test_data = init_datasets(params, 1)
 
         BATCH_SIZE = params.batch_size
         EPOCHS = params.epochs
 
+        known_train_dataset = training_data.mnist if params.dataset == "EMNIST" else training_data.CIFAR10
+
+        train_sampler, val_sampler = train_val_balanced_samplers(0.2, known_train_dataset)
 
         train_data_loader = torch.utils.data.DataLoader(
             training_data,
             batch_size=BATCH_SIZE,
-            shuffle=True,
+            # shuffle=True,
             num_workers=5,
             pin_memory=True,
+            sampler=train_sampler,
         )
+
         val_data_loader = torch.utils.data.DataLoader(
-            validation_data, batch_size=BATCH_SIZE, pin_memory=True
+            validation_data, batch_size=BATCH_SIZE, pin_memory=True, sampler=val_sampler
         )
 
         test_data_loader = torch.utils.data.DataLoader(
@@ -100,7 +135,7 @@ def baseline_model(params, gpu):
             )
         else:
             model = ResNet18(
-                num_classes = 10,
+                num_classes=10,
             )
 
         learning_rate = params.learning_rate
@@ -121,31 +156,30 @@ def baseline_model(params, gpu):
             device=device,
         )
 
-        if not params.train_only:
-            val_features_dict, val_logits_dict = validation(
-                model,
-                val_data_loader,
-                validation_data,
-                loss_fn,
-                path_model,
-                device=device,
-            )
+        val_features_dict, val_logits_dict = validation(
+            model,
+            val_data_loader,
+            validation_data,
+            loss_fn,
+            path_model,
+            device=device,
+        )
 
-            test_features_dict, test_logits_dict = testing(
-                model, test_data_loader, test_data, loss_fn, path_model, device=device
-            )
+        test_features_dict, test_logits_dict = testing(
+            model, test_data_loader, test_data, loss_fn, path_model, device=device
+        )
 
-            saved_output_dict = (
-                training_features_dict,
-                val_features_dict,
-                val_logits_dict,
-                test_features_dict,
-                test_logits_dict,
-            )
+        saved_output_dict = (
+            training_features_dict,
+            val_features_dict,
+            val_logits_dict,
+            test_features_dict,
+            test_logits_dict,
+        )
 
-            network_output_to_pkl(
-                saved_output_dict, params.saved_network_output_dir, model_name
-            )
+        network_output_to_pkl(
+            saved_output_dict, params.saved_network_output_dir, model_name
+        )
 
     else:
         (
@@ -156,7 +190,7 @@ def baseline_model(params, gpu):
             test_logits_dict,
         ) = load_network_output(params.saved_network_output_dir, model_name)
 
-    if not params.train_only:
+    if params.post_process:
         tail_sizes = params.tail_sizes
         distance_multpls = params.distance_multipls
         normalize_factor = params.normalize_factor
@@ -187,7 +221,9 @@ def baseline_model(params, gpu):
 
                 gamma_score = oscr_confidence(preprocess_ccr_fpr)
 
-                epsilon_score = oscr_epsilon_metric(ccr_fpr_per_model, params.thresholds)
+                epsilon_score = oscr_epsilon_metric(
+                    ccr_fpr_per_model, params.thresholds
+                )
 
                 results_dict = {
                     "ACC": acc_per_model,

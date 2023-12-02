@@ -41,7 +41,7 @@ class EMNIST(torch.utils.data.dataset.Dataset):
     ):
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
-            train=which_set == "train",
+            train=which_set == "train" or which_set == "val",
             download=True,
             split="mnist",
             transform=transforms.Compose([transforms.ToTensor(), transpose]),
@@ -127,4 +127,3 @@ class EMNIST(torch.utils.data.dataset.Dataset):
         self.mnist.data = torch.tensor(data_)
         self.mnist.targets = targets_
         logger.info("Clustering Done.")
-

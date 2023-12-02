@@ -23,7 +23,7 @@ def train(
     special_clustering = False
 
     features_dict = {}
-    
+
     input_clustering = input_clustering_num > 1
 
     model.train()
@@ -49,8 +49,8 @@ def train(
                         training_pred, batch_labels, training_features
                     ):
                         if special_clustering:
-                            pred = pred//input_clustering_num
-                            label = label//input_clustering_num
+                            pred = pred // input_clustering_num
+                            label = label // input_clustering_num
                         if pred == label:
                             if label.item() in features_dict:
                                 features_dict[label.item()] = torch.cat(

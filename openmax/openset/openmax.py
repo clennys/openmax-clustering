@@ -76,7 +76,7 @@ def openmax_run(
     normalize_factor: str,
     n_clusters_per_class_input: int = 1,
     n_clusters_per_class_features: int = 1,
-    trainings_features = False
+    trainings_features=False,
 ):
     feature_clustering = n_clusters_per_class_features > 1
     input_clustering = n_clusters_per_class_input > 1
@@ -96,9 +96,9 @@ def openmax_run(
     models_props_dict = {}
 
     # if feature_clustering and input_clustering and trainings_features and False:
-    if feature_clustering and input_clustering and trainings_features: 
+    if feature_clustering and input_clustering and trainings_features:
         clusters_per_class = n_clusters_per_class_features * n_clusters_per_class_input
-    elif feature_clustering: 
+    elif feature_clustering:
         clusters_per_class = n_clusters_per_class_features
     else:
         clusters_per_class = n_clusters_per_class_input
@@ -109,9 +109,7 @@ def openmax_run(
         )
 
         if feature_clustering or input_clustering:
-            props_dict = max_entry_for_each_cluster(
-                props_dict, clusters_per_class
-            )
+            props_dict = max_entry_for_each_cluster(props_dict, clusters_per_class)
 
         models_props_dict[key] = props_dict
 
