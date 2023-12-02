@@ -1,5 +1,5 @@
 type: base
-dataset: CIFAR
+dataset: EMNIST
 learning_rate: 0.01
 momentum: 0.9
 epochs: 1
