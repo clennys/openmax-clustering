@@ -6,7 +6,7 @@ from loguru import logger
 
 def validation(
     model,
-    validation_data,
+    val_sampler,
     val_data_loader,
     num_cluster_per_class_input,
     path_model,
@@ -68,10 +68,10 @@ def validation(
 
                 # total_loss += loss.item()
 
-                batch_acc = correct_predictions / len(validation_data)
+                batch_acc = correct_predictions / len(val_sampler)
                 tepoch.set_postfix(acc=batch_acc)
 
-            accuracy = correct_predictions / len(validation_data)
+            accuracy = correct_predictions / len(val_sampler)
             avg_loss = total_loss / len(val_data_loader)
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict

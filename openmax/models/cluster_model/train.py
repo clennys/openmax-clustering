@@ -6,7 +6,7 @@ from loguru import logger
 
 def train(
     model,
-    training_data,
+    sampler,
     train_data_loader,
     optimizer,
     loss_fn,
@@ -79,11 +79,11 @@ def train(
                         (non_cluster_predicted == non_cluster_batch_labels).sum().item()
                     )
 
-                curr_acc = correct_predictions / len(training_data)
+                curr_acc = correct_predictions / len(sampler)
                 tepoch.set_postfix(loss=loss.item(), acc=curr_acc)
 
-            accuracy = correct_predictions / len(training_data)
-            accuracy_cluster = correct_predictions_cluster / len(training_data)
+            accuracy = correct_predictions / len(sampler)
+            accuracy_cluster = correct_predictions_cluster / len(sampler)
             avg_loss = total_loss / len(train_data_loader)
 
             if input_clustering:
