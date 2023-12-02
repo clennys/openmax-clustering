@@ -147,7 +147,7 @@ def baseline_model(params, gpu):
 
         training_features_dict = train(
             model,
-            training_data,
+            len(train_sampler),
             train_data_loader,
             optimizer,
             loss_fn,
@@ -159,7 +159,7 @@ def baseline_model(params, gpu):
         val_features_dict, val_logits_dict = validation(
             model,
             val_data_loader,
-            validation_data,
+            len(val_sampler),
             loss_fn,
             path_model,
             device=device,

@@ -5,7 +5,7 @@ from loguru import logger
 
 
 def validation(
-    model, val_data_loader, validation_data, loss_fn, path_model="", device=None
+    model, val_data_loader, nr_samples, loss_fn, path_model="", device=None
 ):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
@@ -53,10 +53,10 @@ def validation(
 
                 # total_loss += loss.item()
 
-                batch_acc = correct_predictions / len(validation_data)
+                batch_acc = correct_predictions / nr_samples
                 tepoch.set_postfix(acc=batch_acc)
 
-            accuracy = correct_predictions / len(validation_data)
+            accuracy = correct_predictions / nr_samples
             avg_loss = total_loss / len(val_data_loader)
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict

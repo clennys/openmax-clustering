@@ -6,7 +6,7 @@ from loguru import logger
 
 def train(
     model,
-    training_data,
+    nr_samples,
     train_data_loader,
     optimizer,
     loss_fn,
@@ -63,11 +63,11 @@ def train(
                 _, predicted = torch.max(training_predictions, 1)
                 correct_predictions += (predicted == batch_labels).sum().item()
 
-                curr_acc = correct_predictions / len(training_data)
+                curr_acc = correct_predictions / nr_samples
 
                 tepoch.set_postfix(loss=loss.item(), acc=curr_acc)
 
-            accuracy = correct_predictions / len(training_data)
+            accuracy = correct_predictions / nr_samples
 
             avg_loss = total_loss / len(train_data_loader)
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}")
