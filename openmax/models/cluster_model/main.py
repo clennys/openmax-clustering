@@ -103,8 +103,8 @@ def get_type(params):
 
     return input_clustering, validation_features_cluster, training_features_clustering
 
-def train_val_balanced_samplers(val_ratio, train_dataset):
-    n_samples_class = int(np.floor(len(train_dataset) * val_ratio / 10))
+def train_val_balanced_samplers(val_ratio, train_dataset, n_classes):
+    n_samples_class = int(np.floor(len(train_dataset) * val_ratio / (n_classes * 10)))
 
     # Get all the targets from the dataset
     targets = np.array(train_dataset.targets)
@@ -114,7 +114,7 @@ def train_val_balanced_samplers(val_ratio, train_dataset):
     valid_indices = []
 
     # For each class
-    for i in range(10):  # Assuming there are 10 classes in CIFAR10
+    for i in range(n_classes * 10):  # Assuming there are 10 classes in CIFAR10
         # Get the indices for this class
         class_indices = np.where(targets == i)[0]
 
@@ -134,11 +134,11 @@ def train_val_balanced_samplers(val_ratio, train_dataset):
 
 
 
-def init_dataloader(train_data, validation_data, test_data, params):
+def init_dataloader(train_data, validation_data, test_data, params, n_input_clusters = 1):
 
     known_train_dataset = train_data.mnist if params.dataset == "EMNIST" else train_data.CIFAR10
 
-    train_sampler, val_sampler = train_val_balanced_samplers(0.2, known_train_dataset)
+    train_sampler, val_sampler = train_val_balanced_samplers(0.2, known_train_dataset, n_input_clusters)
 
     train_data_loader = torch.utils.data.DataLoader(
         train_data,
@@ -199,7 +199,7 @@ def cluster_model(params, gpu):
                 train_sampler,
                 val_sampler
             ) = init_dataloader(
-                train_data, validation_data, test_data, params
+                train_data, validation_data, test_data, params, n_clusters_per_class_input
             )
 
             if params.dataset == "EMNIST":
