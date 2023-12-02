@@ -92,7 +92,7 @@ def init_datasets(params, cluster_per_class=1):
 
 
 def baseline_model(params, gpu):
-    if params.dataset == EMNIST:
+    if params.dataset == "EMNIST":
         model_name = "openmax_cnn_eminst0"
     else:
         model_name = "openmax_cnn_cifar0"
