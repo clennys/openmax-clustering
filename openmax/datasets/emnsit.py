@@ -127,3 +127,4 @@ class EMNIST(torch.utils.data.dataset.Dataset):
         self.mnist.data = torch.tensor(data_)
         self.mnist.targets = targets_
         logger.info("Clustering Done.")
+

@@ -1,43 +1,80 @@
 import torch
 import torch.nn as nn
 from datasets.emnsit import EMNIST
+from datasets.CIFAR import CIFAR
 from models.base_model.train import *
 from models.base_model.test import *
 from models.base_model.validation import *
-from models.base_model.model import LeNet
+from models.base_model.model import LeNet, ResNet18
 from openset.openmax import *
 from openset.metrics import *
 from loguru import logger
 from util.util import *
 
-
-def baseline_model(params, gpu):
-    model_name = "openmax_cnn_eminst0"
-
-    if not params.eval_only:
-        device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
-
-        BATCH_SIZE = params.batch_size
-        EPOCHS = params.epochs
-
-        training_data = EMNIST(
+def init_datasets(params, cluster_per_class=1):
+    if params.dataset == "EMNIST":
+        train_data = EMNIST(
             dataset_root=params.emnist_dir,
             which_set="train",
             include_unknown=False,
             has_garbage_class=False,
+            use_clusters=True if cluster_per_class > 1 else False,
+            num_clusters_per_class=cluster_per_class,
         )
+
         validation_data = EMNIST(
             dataset_root=params.emnist_dir,
             which_set="val",
             include_unknown=False,
             has_garbage_class=False,
         )
+
         test_data = EMNIST(
             dataset_root=params.emnist_dir,
             which_set="test",
             include_unknown=True,
             has_garbage_class=False,
         )
+    elif params.dataset == "CIFAR":
+        train_data = CIFAR(
+            dataset_root=params.emnist_dir,
+            which_set="train",
+            include_unknown=False,
+        )
+
+        validation_data = CIFAR(
+            dataset_root=params.emnist_dir,
+            which_set="val",
+            include_unknown=False,
+        )
+
+        test_data = CIFAR(
+            dataset_root=params.emnist_dir,
+            which_set="test",
+            include_unknown=True,
+        )
+    else: 
+        raise Exception("Unable to find the dataset.")
+
+    return train_data, validation_data, test_data
+
+
+def baseline_model(params, gpu):
+    if params.dataset == EMNIST:
+        model_name = "openmax_cnn_eminst0"
+    else:
+        model_name = "openmax_cnn_cifar0"
+
+    if not params.eval_only:
+        device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
+
+        training_data, validation_data, test_data = init_datasets(
+                    params, 1
+                )
+
+        BATCH_SIZE = params.batch_size
+        EPOCHS = params.epochs
+
 
         train_data_loader = torch.utils.data.DataLoader(
             training_data,
@@ -54,12 +91,17 @@ def baseline_model(params, gpu):
             test_data, batch_size=BATCH_SIZE, pin_memory=True
         )
 
-        model = LeNet(
-            use_classification_layer=True,
-            use_BG=False,
-            num_classes=10,
-            final_layer_bias=True,
-        )
+        if params.dataset == "EMNIST":
+            model = LeNet(
+                use_classification_layer=True,
+                use_BG=False,
+                num_classes=10,
+                final_layer_bias=True,
+            )
+        else:
+            model = ResNet18(
+                num_classes = 10,
+            )
 
         learning_rate = params.learning_rate
         loss_fn = nn.CrossEntropyLoss()

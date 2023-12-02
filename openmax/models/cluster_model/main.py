@@ -154,7 +154,7 @@ def cluster_model(params, gpu):
                 loss_fn,
                 params.epochs,
                 path_model,
-                input_clustering,
+                n_clusters_per_class_input,
                 device,
             )
 
@@ -187,7 +187,7 @@ def cluster_model(params, gpu):
                 )
 
                 network_output_to_pkl(
-                    saved_output_dict, params.saved_network_output_dir, model_name
+                    saved_output_dict, params.saved_network_output_dir, model_name + "SPECIAL"
                 )
 
         else:

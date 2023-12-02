@@ -12,7 +12,7 @@ def train(
     loss_fn,
     num_epochs,
     path_model,
-    input_clustering,
+    input_clustering_num,
     device,
 ):
     if os.path.isfile(path_model):
@@ -20,8 +20,11 @@ def train(
         logger.info(f"Loaded: {path_model}")
 
     model = model.to(device)
+    special_clustering = False
 
     features_dict = {}
+    
+    input_clustering = input_clustering_num > 1
 
     model.train()
     for epoch in range(num_epochs):
@@ -45,6 +48,9 @@ def train(
                     for pred, label, features in zip(
                         training_pred, batch_labels, training_features
                     ):
+                        if special_clustering:
+                            pred = pred//input_clustering_num
+                            label = label//input_clustering_num
                         if pred == label:
                             if label.item() in features_dict:
                                 features_dict[label.item()] = torch.cat(
@@ -64,10 +70,10 @@ def train(
                 correct_predictions += (predicted == batch_labels).sum().item()
                 if input_clustering:
                     non_cluster_predicted = torch.div(
-                        predicted, 3, rounding_mode="floor"
+                        predicted, input_clustering_num, rounding_mode="floor"
                     ).int()
                     non_cluster_batch_labels = torch.div(
-                        batch_labels, 3, rounding_mode="floor"
+                        batch_labels, input_clustering_num, rounding_mode="floor"
                     ).int()
                     correct_predictions_cluster += (
                         (non_cluster_predicted == non_cluster_batch_labels).sum().item()
