@@ -5,7 +5,6 @@ import torch.nn as nn
 from clustering.agglomerative_clustering import agglo_clustering
 from loguru import logger
 
-
 def euclidean_pairwisedistance(x: Tensor, y: Tensor) -> Tensor:
     """
     Computes batched the p-norm distance between each pair of the two collections of row vectors.
@@ -25,9 +24,10 @@ def cosine_pairwisedistance(x, y):
 
 
 def adjust_weights_for_negative_actv(sorted_activations, weights):
+    weights_new = weights.detach().clone()
     mask = sorted_activations < 0
-    weights[mask] = 2 - weights[mask]
-    return weights
+    weights_new[mask] = 2 - weights_new[mask]
+    return weights_new
 
 
 def value_shift(sorted_activations):
@@ -130,6 +130,8 @@ def openmax_run(
                 models_props_dict[model_idx][key].shape[1]
                 == openmax_alpha_logits_dict[key].shape[1]
             ), f"Shape model props {models_props_dict[model_idx][key].shape[1]}, logits shape {openmax_alpha_logits_dict[key].shape[1]}"
+
+            logger.debug( "!" * 30 + f"KEY: {key}" + "!" * 30)
 
             openmax_predictions_dict[key], _, openmax_scores_dict[key] = openmax_alpha(
                 models_props_dict[model_idx][key],
@@ -240,28 +242,46 @@ def openmax_alpha(
         sorted_activations = value_shift(sorted_activations)
 
         revisted_activations = sorted_activations * weights
-        unknowness_class_revisted_activations = sorted_activations * (1 - weights)
+
+        norm_weights = 1 - weights
+
+        unknowness_class_revisted_activations = sorted_activations * norm_weights
 
     elif negative_fix == "NEGATIVE_VALUE":
         adjusted_weights = adjust_weights_for_negative_actv(sorted_activations, weights)
+
         revisted_activations = sorted_activations * adjusted_weights
 
-        unknowness_class_revisted_activations = sorted_activations * (
-            1 - adjusted_weights
-        )
+        norm_weights = 1 - adjusted_weights
+
+        unknowness_class_revisted_activations = sorted_activations * norm_weights
+
+    elif negative_fix == "ADJUSTED_NEGATIVE_VALUE":
+        adjusted_weights = adjust_weights_for_negative_actv(sorted_activations, weights)
+
+        revisted_activations = sorted_activations * adjusted_weights
+
+        adjusted_weights_unknown = adjust_weights_for_negative_actv(sorted_activations, 1 - weights)
+
+        unknowness_class_revisted_activations = sorted_activations * adjusted_weights_unknown
+
+        norm_weights = adjusted_weights_unknown
 
     else:
         revisted_activations = sorted_activations * weights
 
-        unknowness_class_revisted_activations = sorted_activations * (1 - weights)
+        norm_weights = 1 - weights
+
+        unknowness_class_revisted_activations = sorted_activations * norm_weights
+
 
     if normalize_factor_unknowness_prob == "N-CLASSES":
         # assert alpha == -1
         normalize_factor = 1 / 9
     elif normalize_factor_unknowness_prob == "WEIGHTS":
-        normalize_factor = 1 / torch.sum((1 - weights), dim=1)
+        normalize_factor = 1 / torch.sum((norm_weights), dim=1)
     elif normalize_factor_unknowness_prob == "NORM-WEIGHTS":
-        normalize_factor = 1 / torch.sum((1 - weights), dim=1)
+        normalize_factor = 1 / torch.sum((norm_weights), dim=1)
         normalize_factor = torch.abs(normalize_factor)
     else:
         normalize_factor = 1
@@ -270,7 +290,6 @@ def openmax_alpha(
     unknowness_class_prob = normalize_factor * torch.sum(
         unknowness_class_revisted_activations, dim=1
     )
-
     revisted_activations = torch.scatter(
         torch.ones(revisted_activations.shape),
         1,
@@ -281,6 +300,13 @@ def openmax_alpha(
     probability_vector = torch.cat(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
     )
+
+    logger.debug("=" * 30)
+    logger.debug(f"normalize_factor {normalize_factor}")
+    logger.debug(f"unkn sum {torch.sum(unknowness_class_revisted_activations, dim=1)[0]}")
+    logger.debug(f"unknowness_class_prob {unknowness_class_prob[0]}")
+    logger.debug(f"top scores {torch.max(probability_vector, dim=1)[0][0]}")
+
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)

@@ -3,6 +3,7 @@ import torch
 from datetime import datetime
 from loguru import logger
 import pickle
+import io
 
 
 def args_setup():
@@ -39,8 +40,17 @@ def network_output_to_pkl(data, path, model_name):
         logger.info(f"Network output saved as {file_}.")
 
 
+class CPU_Unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'torch.storage' and name == '_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
+        else:
+            return super().find_class(module, name)
+
+
 def load_network_output(path, model_name):
     file_ = path + "dnn_output_" + f"{model_name}" + ".pkl"
     with open(file_, "rb") as f:
-        loaded_file = pickle.load(f)
+        loaded_file = CPU_Unpickler(f).load()
+        # loaded_file = pickle.load(f)
         return loaded_file
