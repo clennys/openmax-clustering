@@ -4,6 +4,8 @@ from torch import Tensor
 import torch.nn as nn
 from clustering.agglomerative_clustering import agglo_clustering
 from loguru import logger
+from util.util import load_cluster_output
+
 
 def euclidean_pairwisedistance(x: Tensor, y: Tensor) -> Tensor:
     """
@@ -77,14 +79,18 @@ def openmax_run(
     n_clusters_per_class_input: int = 1,
     n_clusters_per_class_features: int = 1,
     trainings_features=False,
+    precomputed_clusters=None,
 ):
     feature_clustering = n_clusters_per_class_features > 1
     input_clustering = n_clusters_per_class_input > 1
 
     if feature_clustering:
-        openmax_training_features_dict = val_features_clustering(
-            openmax_training_features_dict, n_clusters_per_class_features
-        )
+        if precomputed_clusters is None:
+            openmax_training_features_dict = val_features_clustering(
+                openmax_training_features_dict, n_clusters_per_class_features
+            )
+        else:
+            openmax_training_features_dict = precomputed_clusters
 
     models_dict = {}
     for tail in tail_sizes:
@@ -97,7 +103,7 @@ def openmax_run(
 
     # if feature_clustering and input_clustering and trainings_features and False:
     if feature_clustering and input_clustering and trainings_features:
-        clusters_per_class = n_clusters_per_class_features * n_clusters_per_class_input
+        clusters_per_class = n_clusters_per_class_features
     elif feature_clustering:
         clusters_per_class = n_clusters_per_class_features
     else:
@@ -131,7 +137,7 @@ def openmax_run(
                 == openmax_alpha_logits_dict[key].shape[1]
             ), f"Shape model props {models_props_dict[model_idx][key].shape[1]}, logits shape {openmax_alpha_logits_dict[key].shape[1]}"
 
-            logger.debug( "!" * 30 + f"KEY: {key}" + "!" * 30)
+            # logger.debug( "!" * 30 + f"\tKEY: {key} == MODEL-KEY: {model_idx}\t" + "!" * 30)
 
             openmax_predictions_dict[key], _, openmax_scores_dict[key] = openmax_alpha(
                 models_props_dict[model_idx][key],
@@ -257,16 +263,43 @@ def openmax_alpha(
         unknowness_class_revisted_activations = sorted_activations * norm_weights
 
     elif negative_fix == "ADJUSTED_NEGATIVE_VALUE":
+        # logger.debug(f"INDICES {indices[0]}")
+        # logger.debug(f"WEIGHTS PRE ADJUSTED {weights[0]}")
+        # logger.debug(f"SORTED_ACTV PRE ADJUSTED {sorted_activations[0]}")
         adjusted_weights = adjust_weights_for_negative_actv(sorted_activations, weights)
+        # logger.debug(f"WEIGHTS POST ADJUSTED {weights[0]}")
+        # logger.debug(f"SORTED_ACTV POST ADJUSTED {sorted_activations[0]}")
+        # logger.debug(f"ADJUSTED WEIGHTS {adjusted_weights[0]}")
 
         revisted_activations = sorted_activations * adjusted_weights
+        # logger.debug(f"revisted_activations {revisted_activations[0]}")
 
-        adjusted_weights_unknown = adjust_weights_for_negative_actv(sorted_activations, 1 - weights)
+        adjusted_weights_unknown = adjust_weights_for_negative_actv(
+            sorted_activations, 1 - weights
+        )
+        # logger.debug(f"ADJUSTED_WEIGHTS UNKNOWN {adjusted_weights_unknown[0]}")
 
-        unknowness_class_revisted_activations = sorted_activations * adjusted_weights_unknown
+        unknowness_class_revisted_activations_full = (
+            sorted_activations * adjusted_weights_unknown
+        )
+        # logger.debug(f"ADJUSTED_WEIGHTS UNKNOWN {adjusted_weights_unknown[0]}")
+        # logger.debug(f"Unknowness Revistede {unknowness_class_revisted_activations_full[0]}")
 
-        norm_weights = adjusted_weights_unknown
+        if alpha != -1:
+            # Due to 2-(1-w) if w = 1 => 2-(1-1) = 2
+            norm_weights = adjusted_weights_unknown[
+                :, : alpha - 1
+            ]  # -1 because alhpa - i / alpha = 0, i in [1, alpha] (inclusive) normally would turn be 0
+            unknowness_class_revisted_activations = (
+                unknowness_class_revisted_activations_full[:, : alpha - 1]
+            )
+        else:
+            norm_weights = adjusted_weights_unknown
+            unknowness_class_revisted_activations = (
+                unknowness_class_revisted_activations_full
+            )
 
+        # logger.debug(f"Unknowness Revistede cut {unknowness_class_revisted_activations[0]}")
     else:
         revisted_activations = sorted_activations * weights
 
@@ -274,14 +307,13 @@ def openmax_alpha(
 
         unknowness_class_revisted_activations = sorted_activations * norm_weights
 
-
     if normalize_factor_unknowness_prob == "N-CLASSES":
         # assert alpha == -1
         normalize_factor = 1 / 9
     elif normalize_factor_unknowness_prob == "WEIGHTS":
-        normalize_factor = 1 / torch.sum((norm_weights), dim=1)
+        normalize_factor = 1 / torch.sum(norm_weights, dim=1)
     elif normalize_factor_unknowness_prob == "NORM-WEIGHTS":
-        normalize_factor = 1 / torch.sum((norm_weights), dim=1)
+        normalize_factor = 1 / torch.sum(norm_weights, dim=1)
         normalize_factor = torch.abs(normalize_factor)
     else:
         normalize_factor = 1
@@ -301,12 +333,10 @@ def openmax_alpha(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
     )
 
-    logger.debug("=" * 30)
-    logger.debug(f"normalize_factor {normalize_factor}")
-    logger.debug(f"unkn sum {torch.sum(unknowness_class_revisted_activations, dim=1)[0]}")
-    logger.debug(f"unknowness_class_prob {unknowness_class_prob[0]}")
-    logger.debug(f"top scores {torch.max(probability_vector, dim=1)[0][0]}")
-
+    # logger.debug(f"normalize_factor {normalize_factor[0]}")
+    # logger.debug(f"unkn sum {torch.sum(unknowness_class_revisted_activations, dim=1)[0]}")
+    # logger.debug(f"unknowness_class_prob {unknowness_class_prob[0]}")
+    # logger.debug(f"top scores {torch.max(probability_vector, dim=1)[0][0]}")
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)

@@ -95,6 +95,7 @@
             xorg.libXv
             zlib
             jetbrains.pycharm-professional
+			texlive.combined.scheme-basic
           ]);
         profile = ''
           # cuda

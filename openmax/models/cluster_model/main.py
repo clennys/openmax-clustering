@@ -13,7 +13,7 @@ from models.base_model.model import LeNet, ResNet18
 from torch.utils.data.sampler import SubsetRandomSampler
 from util.util import *
 from loguru import logger
-from util.util import tensor_dict_to_cpu
+from util.util import tensor_dict_to_cpu, load_cluster_output
 
 
 def init_datasets(params, cluster_per_class=1):
@@ -64,8 +64,6 @@ def init_datasets(params, cluster_per_class=1):
     return train_data, validation_data, test_data
 
 
-
-
 def get_type(params):
     model_type = params.type
     if model_type == "validation-features-cluster":
@@ -103,6 +101,7 @@ def get_type(params):
 
     return input_clustering, validation_features_cluster, training_features_clustering
 
+
 def train_val_balanced_samplers(val_ratio, train_dataset, n_classes):
     n_samples_class = int(np.floor(len(train_dataset) * val_ratio / (n_classes * 10)))
 
@@ -133,12 +132,14 @@ def train_val_balanced_samplers(val_ratio, train_dataset, n_classes):
     return train_sampler, valid_sampler
 
 
+def init_dataloader(train_data, validation_data, test_data, params, n_input_clusters=1):
+    known_train_dataset = (
+        train_data.mnist if params.dataset == "EMNIST" else train_data.CIFAR10
+    )
 
-def init_dataloader(train_data, validation_data, test_data, params, n_input_clusters = 1):
-
-    known_train_dataset = train_data.mnist if params.dataset == "EMNIST" else train_data.CIFAR10
-
-    train_sampler, val_sampler = train_val_balanced_samplers(0.2, known_train_dataset, n_input_clusters)
+    train_sampler, val_sampler = train_val_balanced_samplers(
+        0.2, known_train_dataset, n_input_clusters
+    )
 
     train_data_loader = torch.utils.data.DataLoader(
         train_data,
@@ -146,18 +147,27 @@ def init_dataloader(train_data, validation_data, test_data, params, n_input_clus
         # shuffle=True,
         num_workers=5,
         pin_memory=True,
-        sampler = train_sampler
+        sampler=train_sampler,
     )
 
     val_data_loader = torch.utils.data.DataLoader(
-        validation_data, batch_size=params.batch_size, pin_memory=True, sampler=val_sampler
+        validation_data,
+        batch_size=params.batch_size,
+        pin_memory=True,
+        sampler=val_sampler,
     )
 
     test_data_loader = torch.utils.data.DataLoader(
         test_data, batch_size=params.batch_size, pin_memory=True
     )
 
-    return train_data_loader, val_data_loader, test_data_loader, train_sampler, val_sampler
+    return (
+        train_data_loader,
+        val_data_loader,
+        test_data_loader,
+        train_sampler,
+        val_sampler,
+    )
 
 
 def cluster_model(params, gpu):
@@ -175,7 +185,9 @@ def cluster_model(params, gpu):
         else:
             dataset_name = "cifar"
 
-        if input_clustering:
+        if input_clustering and training_features_clustering:
+            model_name = f"openmax_cnn_{dataset_name}_cluster-{total_n_clusters}"
+        elif input_clustering:
             model_name = f"openmax_cnn_{dataset_name}_cluster-{total_n_clusters}"
         else:
             model_name = f"openmax_cnn_{dataset_name}0"
@@ -197,9 +209,13 @@ def cluster_model(params, gpu):
                 validation_data_loader,
                 test_data_loader,
                 train_sampler,
-                val_sampler
+                val_sampler,
             ) = init_dataloader(
-                train_data, validation_data, test_data, params, n_clusters_per_class_input
+                train_data,
+                validation_data,
+                test_data,
+                params,
+                n_clusters_per_class_input,
             )
 
             if params.dataset == "EMNIST":
@@ -209,12 +225,10 @@ def cluster_model(params, gpu):
                     num_classes=total_n_clusters,
                     final_layer_bias=True,
                 )
-            else: 
+            else:
                 cluster_model = ResNet18(
                     num_classes=10,
                 )
-
-
 
             loss_fn = nn.CrossEntropyLoss()
             optimizer = torch.optim.SGD(
@@ -233,6 +247,7 @@ def cluster_model(params, gpu):
                 path_model,
                 n_clusters_per_class_input,
                 device,
+                input_clustering and training_features_clustering,
             )
 
             val_features_dict, val_logits_dict = validation(
@@ -266,6 +281,7 @@ def cluster_model(params, gpu):
                 saved_output_dict,
                 params.saved_network_output_dir,
                 model_name,
+                input_clustering and training_features_clustering,
             )
 
         else:
@@ -275,7 +291,11 @@ def cluster_model(params, gpu):
                 val_logits_dict,
                 test_features_dict,
                 test_logits_dict,
-            ) = load_network_output(params.saved_network_output_dir, model_name)
+            ) = load_network_output(
+                params.saved_network_output_dir,
+                model_name,
+                input_clustering and training_features_clustering,
+            )
 
         if params.post_process:
             tail_sizes = params.tail_sizes
@@ -289,7 +309,19 @@ def cluster_model(params, gpu):
                 else training_features_dict
             )
 
+            path_cluster = params.clusters_dir
+
             for n_clusters_per_class_features in params.num_clusters_per_class_features:
+                if params.precomputed_clusters:
+                    precomputed_clusters = load_cluster_output(
+                        path_cluster,
+                        model_name,
+                        n_clusters_per_class_features,
+                        training_features_clustering,
+                    )
+                else:
+                    precomputed_clusters = None
+
                 for alpha in params.alphas:
                     (
                         _,
@@ -308,11 +340,16 @@ def cluster_model(params, gpu):
                         n_clusters_per_class_input,
                         n_clusters_per_class_features,
                         training_features_clustering,
+                        precomputed_clusters,
                     )
 
-                    acc_per_model = known_unknown_acc(openmax_predictions_per_model, alpha)
+                    acc_per_model = known_unknown_acc(
+                        openmax_predictions_per_model, alpha
+                    )
 
-                    preprocess_ccr_fpr = wrapper_preprocess_oscr(openmax_scores_per_model)
+                    preprocess_ccr_fpr = wrapper_preprocess_oscr(
+                        openmax_scores_per_model
+                    )
 
                     ccr_fpr_per_model = oscr(preprocess_ccr_fpr)
 
@@ -335,7 +372,7 @@ def cluster_model(params, gpu):
                         "FEATURES-CLUSTER": n_clusters_per_class_features,
                         "TAILSIZES": tail_sizes,
                         "DIST-MULT": distance_multpls,
-                        "DATASET": params.dataset
+                        "DATASET": params.dataset,
                     }
 
                     save_oscr_values(params.experiment_data_dir, results_dict)

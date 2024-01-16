@@ -93,7 +93,7 @@ def init_datasets(params, cluster_per_class=1):
 
 def baseline_model(params, gpu):
     if params.dataset == "EMNIST":
-        model_name = "openmax_cnn_eminst0"
+        model_name = "openmax_cnn_emnist0"
     else:
         model_name = "openmax_cnn_cifar0"
 
@@ -105,9 +105,13 @@ def baseline_model(params, gpu):
         BATCH_SIZE = params.batch_size
         EPOCHS = params.epochs
 
-        known_train_dataset = training_data.mnist if params.dataset == "EMNIST" else training_data.CIFAR10
+        known_train_dataset = (
+            training_data.mnist if params.dataset == "EMNIST" else training_data.CIFAR10
+        )
 
-        train_sampler, val_sampler = train_val_balanced_samplers(0.2, known_train_dataset)
+        train_sampler, val_sampler = train_val_balanced_samplers(
+            0.2, known_train_dataset
+        )
 
         train_data_loader = torch.utils.data.DataLoader(
             training_data,
@@ -238,7 +242,7 @@ def baseline_model(params, gpu):
                     "FEATURES-CLUSTER": 1,
                     "TAILSIZES": tail_sizes,
                     "DIST-MULT": distance_multpls,
-                    "DATASET": params.dataset
+                    "DATASET": params.dataset,
                 }
 
                 save_oscr_values(params.experiment_data_dir, results_dict)

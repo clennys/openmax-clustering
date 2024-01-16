@@ -4,9 +4,7 @@ from tqdm import tqdm
 from loguru import logger
 
 
-def validation(
-    model, val_data_loader, nr_samples, loss_fn, path_model="", device=None
-):
+def validation(model, val_data_loader, nr_samples, loss_fn, path_model="", device=None):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")

@@ -14,13 +14,13 @@ def train(
     path_model,
     input_clustering_num,
     device,
+    input_training_cluster=False,
 ):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
 
     model = model.to(device)
-    special_clustering = False
 
     features_dict = {}
 
@@ -48,7 +48,7 @@ def train(
                     for pred, label, features in zip(
                         training_pred, batch_labels, training_features
                     ):
-                        if special_clustering:
+                        if input_training_cluster and False:
                             pred = pred // input_clustering_num
                             label = label // input_clustering_num
                         if pred == label:
