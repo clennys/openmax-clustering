@@ -1,0 +1,69 @@
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {section}{\numberline {2}Getting Started}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Installing from CTAN}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Installing from GitHub}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}A Minimal Example}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Dependencies}{3}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Pandoc}{4}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Customization}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Package options}{4}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Main theme}{4}{subsubsection.3.1.1}%
+\contentsline {subsubsection}{\numberline {3.1.2}Inner theme}{5}{subsubsection.3.1.2}%
+\contentsline {subsubsection}{\numberline {3.1.3}Outer theme}{5}{subsubsection.3.1.3}%
+\contentsline {subsubsection}{\numberline {3.1.4}Color theme}{5}{subsubsection.3.1.4}%
+\contentsline {subsubsection}{\numberline {3.1.5}Font theme}{6}{subsubsection.3.1.5}%
+\contentsline {subsection}{\numberline {3.2}Color Customization}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Font Customization}{6}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Old style figures}{7}{subsubsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.4}Commands}{7}{subsection.3.4}%
+\contentsline {subsubsection}{\numberline {3.4.1}Standout frames}{7}{subsubsection.3.4.1}%
+\contentsline {section}{\numberline {4}\texttt {pgfplots} integration}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Styles}{8}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Paul Tol colors}{8}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Tips \& Tricks}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Backup Slides}{8}{subsection.5.1}%
+\contentsline {section}{\numberline {6}Known Issues}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Title formats}{8}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Interactions with other color themes}{9}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Notes on second screen}{10}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Standout frames with labels}{10}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Standout frames with Pandoc}{11}{subsection.6.5}%
+\contentsline {section}{\numberline {7}License}{11}{section.7}%
+\contentsline {section}{\numberline {8}Implementation}{11}{section.8}%
+\contentsline {subsection}{\numberline {8.1}\textbf {\textsc {metropolis}}\xspace parent theme}{11}{subsection.8.1}%
+\contentsline {subsubsection}{\numberline {8.1.1}Package dependencies}{11}{subsubsection.8.1.1}%
+\contentsline {subsubsection}{\numberline {8.1.2}Options}{12}{subsubsection.8.1.2}%
+\contentsline {subsubsection}{\numberline {8.1.3}Component sub-packages}{13}{subsubsection.8.1.3}%
+\contentsline {subsubsection}{\numberline {8.1.4}Custom commands}{14}{subsubsection.8.1.4}%
+\contentsline {subsubsection}{\numberline {8.1.5}Process package options}{14}{subsubsection.8.1.5}%
+\contentsline {subsection}{\numberline {8.2}\textbf {\textsc {metropolis}}\xspace inner theme}{15}{subsection.8.2}%
+\contentsline {subsubsection}{\numberline {8.2.1}Package dependencies}{15}{subsubsection.8.2.1}%
+\contentsline {subsubsection}{\numberline {8.2.2}Options}{15}{subsubsection.8.2.2}%
+\contentsline {subsubsection}{\numberline {8.2.3}Title page}{16}{subsubsection.8.2.3}%
+\contentsline {subsubsection}{\numberline {8.2.4}Section page}{18}{subsubsection.8.2.4}%
+\contentsline {subsubsection}{\numberline {8.2.5}Block environments}{21}{subsubsection.8.2.5}%
+\contentsline {subsubsection}{\numberline {8.2.6}Lists and floats}{23}{subsubsection.8.2.6}%
+\contentsline {subsubsection}{\numberline {8.2.7}Footnotes}{23}{subsubsection.8.2.7}%
+\contentsline {subsubsection}{\numberline {8.2.8}Text and spacing settings}{23}{subsubsection.8.2.8}%
+\contentsline {subsubsection}{\numberline {8.2.9}Standout frames}{23}{subsubsection.8.2.9}%
+\contentsline {subsubsection}{\numberline {8.2.10}Process package options}{25}{subsubsection.8.2.10}%
+\contentsline {subsection}{\numberline {8.3}\textbf {\textsc {metropolis}}\xspace outer theme}{25}{subsection.8.3}%
+\contentsline {subsubsection}{\numberline {8.3.1}Package dependencies}{25}{subsubsection.8.3.1}%
+\contentsline {subsubsection}{\numberline {8.3.2}Options}{25}{subsubsection.8.3.2}%
+\contentsline {subsubsection}{\numberline {8.3.3}Head and footline}{26}{subsubsection.8.3.3}%
+\contentsline {subsubsection}{\numberline {8.3.4}Frametitle}{27}{subsubsection.8.3.4}%
+\contentsline {subsubsection}{\numberline {8.3.5}Process package options}{28}{subsubsection.8.3.5}%
+\contentsline {subsection}{\numberline {8.4}\textbf {\textsc {metropolis}}\xspace font theme}{28}{subsection.8.4}%
+\contentsline {subsubsection}{\numberline {8.4.1}Package dependencies}{28}{subsubsection.8.4.1}%
+\contentsline {subsubsection}{\numberline {8.4.2}Load Fira fonts}{29}{subsubsection.8.4.2}%
+\contentsline {subsubsection}{\numberline {8.4.3}General font definitions}{31}{subsubsection.8.4.3}%
+\contentsline {subsubsection}{\numberline {8.4.4}Title format options}{32}{subsubsection.8.4.4}%
+\contentsline {subsubsection}{\numberline {8.4.5}Process package options}{37}{subsubsection.8.4.5}%
+\contentsline {subsection}{\numberline {8.5}\textbf {\textsc {metropolis}}\xspace color theme}{37}{subsection.8.5}%
+\contentsline {subsubsection}{\numberline {8.5.1}Package dependencies}{37}{subsubsection.8.5.1}%
+\contentsline {subsubsection}{\numberline {8.5.2}Options}{37}{subsubsection.8.5.2}%
+\contentsline {subsubsection}{\numberline {8.5.3}Base colors}{38}{subsubsection.8.5.3}%
+\contentsline {subsubsection}{\numberline {8.5.4}Base styles}{38}{subsubsection.8.5.4}%
+\contentsline {subsubsection}{\numberline {8.5.5}Derived colors}{38}{subsubsection.8.5.5}%
+\contentsline {subsubsection}{\numberline {8.5.6}Process package options}{41}{subsubsection.8.5.6}%
+\contentsline {subsection}{\numberline {8.6}Tol \texttt {pgfplots} theme}{41}{subsection.8.6}%
