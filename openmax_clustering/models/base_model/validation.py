@@ -18,7 +18,6 @@ def validation(model, val_data_loader, nr_samples, path_model="", device=None):
         model.eval()
         with tqdm(val_data_loader, unit="batch") as tepoch:
             correct_predictions = 0
-            total_loss = 0.0
 
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Validation")
@@ -31,7 +30,7 @@ def validation(model, val_data_loader, nr_samples, path_model="", device=None):
 
                 _, val_predicted = torch.max(val_predictions, 1)
 
-                for pred, label, logits, features in zip(
+                for _, label, logits, features in zip(
                     val_predicted, batch_labels, val_logits, val_features
                 ):
                     if label.item() in val_features_dict:
@@ -47,14 +46,7 @@ def validation(model, val_data_loader, nr_samples, path_model="", device=None):
 
                 correct_predictions += (val_predicted == batch_labels).sum().item()
 
-                # loss = loss_fn(val_predictions, batch_labels)
-
-                # total_loss += loss.item()
-
                 batch_acc = correct_predictions / nr_samples
                 tepoch.set_postfix(acc=batch_acc)
 
-            accuracy = correct_predictions / nr_samples
-            avg_loss = total_loss / len(val_data_loader)
-            logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict

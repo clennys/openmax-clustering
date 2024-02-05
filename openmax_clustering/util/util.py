@@ -7,11 +7,7 @@ import io
 
 
 def args_setup():
-    parser = argparse.ArgumentParser(
-        prog="CNN with MNIST and OpenMax",
-        description="TODO: runs models",
-        epilog="TODO: May the force be with you.",
-    )
+    parser = argparse.ArgumentParser()
 
     parser.add_argument("--gpu", "-g", type=int, help="GPU index")
 
@@ -54,7 +50,6 @@ def load_network_output(path, model_name, special=False):
 
     with open(file_, "rb") as f:
         loaded_file = CPU_Unpickler(f).load()
-        # loaded_file = pickle.load(f)
         return loaded_file
 
 
@@ -72,5 +67,4 @@ def load_cluster_output(path, model_name, n_clusters, training_clustering):
     with open(file_, "rb") as f:
         loaded_file = CPU_Unpickler(f).load()
         logger.info(f"Loaded: {file_}")
-        # loaded_file = pickle.load(f)
         return loaded_file

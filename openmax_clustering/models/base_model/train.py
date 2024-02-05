@@ -26,7 +26,6 @@ def train(
     for epoch in range(num_epochs):
         with tqdm(train_data_loader, unit="batch") as tepoch:
             correct_predictions = 0
-            correct_predictions_cluster = 0
             total_loss = 0.0
 
             for batch_inputs, batch_labels in tepoch:
@@ -54,7 +53,6 @@ def train(
 
                 loss = loss_fn(training_predictions, batch_labels)
 
-                # Backpropagation and optimization
                 loss.backward()
                 optimizer.step()
 
@@ -72,7 +70,6 @@ def train(
             avg_loss = total_loss / len(train_data_loader)
             logger.info(f"Average loss: {avg_loss:.3f} - Accuracy {accuracy:.3f}")
 
-    # Save the trained model
     torch.save(model.state_dict(), path_model)
     logger.info(f"Saved model: {path_model}")
     return features_dict

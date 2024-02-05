@@ -8,12 +8,6 @@ from openmax_clustering.util.util import load_cluster_output
 
 
 def euclidean_pairwisedistance(x: Tensor, y: Tensor) -> Tensor:
-    """
-    Computes batched the p-norm distance between each pair of the two collections of row vectors.
-    :param x: Tensor of size BxPxM
-    :param y: Tensor of size BxRxM
-    :returns: A Tensor of shape BxPxR
-    """
     return torch.cdist(x, y, p=2, compute_mode="donot_use_mm_for_euclid_dist")
 
 
@@ -116,7 +110,6 @@ def openmax_run(
 
     models_props_dict = {}
 
-    # if feature_clustering and input_clustering and trainings_features and False:
     if feature_clustering and input_clustering and trainings_features:
         clusters_per_class = n_clusters_per_class_features
     elif feature_clustering:
@@ -152,8 +145,6 @@ def openmax_run(
                 == openmax_alpha_logits_dict[key].shape[1]
             ), f"Shape model props {models_props_dict[model_idx][key].shape[1]}, logits shape {openmax_alpha_logits_dict[key].shape[1]}"
 
-            # logger.debug( "!" * 30 + f"\tKEY: {key} == MODEL-KEY: {model_idx}\t" + "!" * 30)
-
             openmax_predictions_dict[key], _, openmax_scores_dict[key] = openmax_alpha(
                 models_props_dict[model_idx][key],
                 openmax_alpha_logits_dict[key],
@@ -178,12 +169,6 @@ def openmax_training(
     distance_multiplier: float = 2.0,
     tailsize: int = 100,
 ):
-    # Tuple[dict[str, weibull], dict[str, Tensor]]:
-    """
-    :param pos_classes_to_process: List of class names to be processed by this function in the current process.
-    :param features_all_classes: features of all classes
-    """
-
     model_ = {}
     for label in features_labels_all_classes_dict.keys():
         model_per_label = {}
@@ -208,7 +193,6 @@ def openmax_inference(
     for class_label in features_all_classes:
         features = features_all_classes[class_label]
         probs = []
-        # for model_label in sorted(model_.keys()):
         for model_label in range(total_num_clusters):
             if model_label in model_:
                 mav: Tensor = model_[model_label]["mav"]
@@ -216,7 +200,7 @@ def openmax_inference(
                 prob = model_[model_label]["weibull"].wscore(distances, isReversed=True)
                 probs.append(
                     prob.type(torch.float32)
-                )  # TODO: Reversed? 1 - weibull.cdf
+                )  
             elif class_label == -1:
                 probs.append(torch.zeros(8800, 1))
             else:
@@ -278,33 +262,23 @@ def openmax_alpha(
         unknowness_class_revisted_activations = sorted_activations * norm_weights
 
     elif negative_fix == "ADJUSTED_NEGATIVE_VALUE":
-        # logger.debug(f"INDICES {indices[0]}")
-        # logger.debug(f"WEIGHTS PRE ADJUSTED {weights[0]}")
-        # logger.debug(f"SORTED_ACTV PRE ADJUSTED {sorted_activations[0]}")
         adjusted_weights = adjust_weights_for_negative_actv(sorted_activations, weights)
-        # logger.debug(f"WEIGHTS POST ADJUSTED {weights[0]}")
-        # logger.debug(f"SORTED_ACTV POST ADJUSTED {sorted_activations[0]}")
-        # logger.debug(f"ADJUSTED WEIGHTS {adjusted_weights[0]}")
 
         revisted_activations = sorted_activations * adjusted_weights
-        # logger.debug(f"revisted_activations {revisted_activations[0]}")
 
         adjusted_weights_unknown = adjust_weights_for_negative_actv(
             sorted_activations, 1 - weights
         )
-        # logger.debug(f"ADJUSTED_WEIGHTS UNKNOWN {adjusted_weights_unknown[0]}")
 
         unknowness_class_revisted_activations_full = (
             sorted_activations * adjusted_weights_unknown
         )
-        # logger.debug(f"ADJUSTED_WEIGHTS UNKNOWN {adjusted_weights_unknown[0]}")
-        # logger.debug(f"Unknowness Revistede {unknowness_class_revisted_activations_full[0]}")
 
         if alpha != -1:
             # Due to 2-(1-w) if w = 1 => 2-(1-1) = 2
             norm_weights = adjusted_weights_unknown[
                 :, : alpha - 1
-            ]  # -1 because alhpa - i / alpha = 0, i in [1, alpha] (inclusive) normally would turn be 0
+            ]  # -1 because alpha - i / alpha = 0, i in [1, alpha] (inclusive) normally would turn be 0
             unknowness_class_revisted_activations = (
                 unknowness_class_revisted_activations_full[:, : alpha - 1]
             )
@@ -314,7 +288,6 @@ def openmax_alpha(
                 unknowness_class_revisted_activations_full
             )
 
-        # logger.debug(f"Unknowness Revistede cut {unknowness_class_revisted_activations[0]}")
     else:
         revisted_activations = sorted_activations * weights
 
@@ -327,9 +300,6 @@ def openmax_alpha(
         normalize_factor = 1 / 9
     elif normalize_factor_unknowness_prob == "WEIGHTS":
         normalize_factor = 1 / torch.sum(norm_weights, dim=1)
-    elif normalize_factor_unknowness_prob == "NORM-WEIGHTS":
-        normalize_factor = 1 / torch.sum(norm_weights, dim=1)
-        normalize_factor = torch.abs(normalize_factor)
     else:
         normalize_factor = 1
 
@@ -348,10 +318,6 @@ def openmax_alpha(
         [unknowness_class_prob[:, None], revisted_activations], dim=1
     )
 
-    # logger.debug(f"normalize_factor {normalize_factor[0]}")
-    # logger.debug(f"unkn sum {torch.sum(unknowness_class_revisted_activations, dim=1)[0]}")
-    # logger.debug(f"unknowness_class_prob {unknowness_class_prob[0]}")
-    # logger.debug(f"top scores {torch.max(probability_vector, dim=1)[0][0]}")
 
     # Line 7
     probability_vector = torch.nn.functional.softmax(probability_vector, dim=1)

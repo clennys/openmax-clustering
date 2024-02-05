@@ -118,8 +118,6 @@ class EMNIST(torch.utils.data.dataset.Dataset):
             clusterer = cl.agglo_clustering(
                 n_clusters, linkage, metric, cluster_data_dict[key]
             )
-            # size = len(cluster_data_dict[key])/n_clusters
-            # clusterer = cl.kmeans_constrained(n_clusters, np.floor(size).astype('int'), np.ceil(size).astype('int'), cluster_data_dict[key])
             clusterer_dict[key] = clusterer
 
         targets_ = np.array([], dtype=np.uint8)

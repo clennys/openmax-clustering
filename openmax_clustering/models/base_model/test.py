@@ -4,12 +4,12 @@ from tqdm import tqdm
 from loguru import logger
 
 
-def testing(model, test_data_loader, test_data, loss_fn, path_model="", device=None):
+def testing(model, test_data_loader, test_data, path_model="", device=None):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")
 
-    model = model.to(device)  # Move model to GPU
+    model = model.to(device) 
 
     val_logits_dict = {}
     val_features_dict = {}
@@ -18,7 +18,6 @@ def testing(model, test_data_loader, test_data, loss_fn, path_model="", device=N
         model.eval()
         with tqdm(test_data_loader, unit="batch") as tepoch:
             correct_predictions = 0
-            total_loss = 0.0
 
             for batch_inputs, batch_labels in tepoch:
                 tepoch.set_description(f"Testing")
@@ -30,7 +29,7 @@ def testing(model, test_data_loader, test_data, loss_fn, path_model="", device=N
                 val_predictions, val_logits, val_features = model(batch_inputs)
 
                 _, val_predicted = torch.max(val_predictions, 1)
-                for pred, label, logits, features in zip(
+                for _, label, logits, features in zip(
                     val_predicted, batch_labels, val_logits, val_features
                 ):
                     if label.item() in val_features_dict:
@@ -46,14 +45,7 @@ def testing(model, test_data_loader, test_data, loss_fn, path_model="", device=N
 
                 correct_predictions += (val_predicted == batch_labels).sum().item()
 
-                # loss = loss_fn(val_predictions, batch_labels)
-
-                # total_loss += loss.item()
-
                 batch_acc = correct_predictions / len(test_data)
                 tepoch.set_postfix(acc=batch_acc)
 
-            accuracy = correct_predictions / len(test_data)
-            avg_loss = total_loss / len(test_data_loader)
-            logger.info(f"Average loss: {avg_loss:.3f} - Accuracy: {accuracy:.3f}")
     return val_features_dict, val_logits_dict

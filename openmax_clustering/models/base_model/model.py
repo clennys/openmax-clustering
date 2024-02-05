@@ -46,7 +46,7 @@ class LeNet(nn.Module):
         act_conv2 = self.pool(self.relu_act(self.conv2(act_conv1)))
         act_conv2_reshaped = act_conv2.view(
             -1, self.conv2.out_channels * 7 * 7
-        )  #  view method is used to reshape a tensor without changing its data.
+        )  
         features = self.fc1(act_conv2_reshaped)
         if self.use_classification_layer:
             logits = self.fc2(features)

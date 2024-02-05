@@ -1,5 +1,5 @@
 # OpenMax-Clustering
-This project was created for my Bachelor thesis, called "OpenMax with Clustering for Open-Set Classification". It explores the integration of clustering techniques with OpenMax and optimization to OpenMax itself, in order to enhance its capability in open-set classification.
+This project was created for my Bachelor thesis, called "OpenMax with Clustering for Open-Set Classification". It explores the integration of clustering techniques and optimization to OpenMax in order to enhance its capability in open-set classification.
 
 ## Setup
 Use the conda install script:

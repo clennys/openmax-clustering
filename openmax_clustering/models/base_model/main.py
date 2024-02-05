@@ -15,27 +15,20 @@ from openmax_clustering.util.util import *
 def train_val_balanced_samplers(val_ratio, train_dataset):
     n_samples_class = int(np.floor(len(train_dataset) * val_ratio / 10))
 
-    # Get all the targets from the dataset
     targets = np.array(train_dataset.targets)
 
-    # Initialize lists to store the train and validation indices
     train_indices = []
     valid_indices = []
 
-    # For each class
-    for i in range(10):  # Assuming there are 10 classes in CIFAR10
-        # Get the indices for this class
+    for i in range(10):  
         class_indices = np.where(targets == i)[0]
 
-        # Randomly permute the indices
         np.random.seed(0)
         np.random.shuffle(class_indices)
 
-        # Split the indices into train and validation indices
         train_indices.extend(class_indices[n_samples_class:])
         valid_indices.extend(class_indices[:n_samples_class])
 
-    # Define samplers
     train_sampler = SubsetRandomSampler(train_indices)
     valid_sampler = SubsetRandomSampler(valid_indices)
 
@@ -168,7 +161,7 @@ def baseline_model(params, gpu):
         )
 
         test_features_dict, test_logits_dict = testing(
-            model, test_data_loader, test_data, loss_fn, path_model, device=device
+            model, test_data_loader, test_data, path_model, device=device
         )
 
         saved_output_dict = (
