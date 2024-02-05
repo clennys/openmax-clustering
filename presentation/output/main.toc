@@ -1,1 +1,4 @@
-\beamer@sectionintoc {1}{First Section}{3}{0}{1}
+\beamer@sectionintoc {1}{Open-Set}{3}{0}{1}
+\beamer@sectionintoc {2}{OpenMax}{5}{0}{2}
+\beamer@sectionintoc {3}{Approach}{12}{0}{3}
+\beamer@sectionintoc {4}{Discussion}{30}{0}{4}
