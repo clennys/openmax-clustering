@@ -160,7 +160,7 @@ def baseline_model(params, gpu):
             device=device,
         )
 
-        test_features_dict, test_logits_dict = testing(
+        test_features_dict, test_logits_dict = test(
             model, test_data_loader, test_data, path_model, device=device
         )
 

@@ -1,4 +1,4 @@
-\section{Approach}
+\section{Approach \& Experiments}
 \begin{frame}{Improving OpenMax}
 	\begin{itemize}
 		\item Handling negative logits
@@ -8,8 +8,8 @@
 		      \end{itemize}
 		\item Introducing weight factors
 		      \begin{itemize}
-			      \item $ \varphi_N = \frac{1}{N-1}$
-			      \item $ \varphi_{\omega} = \frac{1}{\sum_i (1 - \omega_i)}$
+			      \item $ \phi_N = \frac{1}{N-1}$
+			      \item $ \phi_{\omega} = \frac{1}{\sum_i (1 - \omega_i)}$
 		      \end{itemize}
 		\item Removing alpha parameter
 	\end{itemize}
@@ -52,19 +52,67 @@
 \end{frame}
 
 \begin{frame}{Baseline ($\gamma$)}
-	\includegraphics[width=\textwidth]{figures/base_gamma.png}
+	\centering
+	\includegraphics[width=0.65\textwidth]{figures/base_gamma.png}
+	\footnotesize{	\begin{tabularx}{\textwidth}{ |X|X|X|X|X|X| }
+			\hline
+			Rank & $\alpha$ & $\eta$ & $\kappa$ & $\gamma$ & $\Sigma$ \\
+			\hline
+			1    & 7        & 1000   & 1.0      & 0.805    & 4.272    \\
+			2    & 10       & 1000   & 1.0      & 0.803    & 3.685    \\
+			3    & 5        & 1000   & 1.0      & 0.800    & 3.669    \\
+			4    & 3        & 1000   & 1.0      & 0.718    & 2.855    \\
+			5    & -1       & 1000   & 1.0      & 0.600    & 2.899    \\
+			\hline
+		\end{tabularx}}
 \end{frame}
 
 \begin{frame}{Baseline ($\Sigma$)}
-	\includegraphics[width=\textwidth]{figures/base_sigma.png}
+	\centering
+	\includegraphics[width=0.65\textwidth]{figures/base_sigma.png}
+	\footnotesize{	\begin{tabularx}{\textwidth}{ |X|X|X|X|X|X| }
+			\hline
+			Rank & $\alpha$ & $\eta$ & $\kappa$ & $\gamma$ & $\Sigma$ \\
+			\hline
+			1    & 7        & 1000   & 1.0      & 0.805    & 4.272    \\
+			2    & 10       & 1000   & 1.0      & 0.803    & 3.685    \\
+			3    & 5        & 1000   & 1.0      & 0.800    & 3.669    \\
+			4    & -1       & 10     & 2.3      & 0.514    & 2.917    \\
+			5    & 3        & 100    & 3.0      & 0.514    & 2.916    \\
+			\hline
+		\end{tabularx}
+	}
 \end{frame}
 
 \begin{frame}{Results RQ1 ($\gamma$)}
-	\includegraphics[width=\textwidth]{figures/Top-gamma.png}
+	\centering
+	\includegraphics[width=0.65\textwidth]{figures/Top-gamma.png}
+	\footnotesize{\begin{tabularx}{\textwidth}{ |X|X|X|X|X|l|X|X| }
+			\hline
+			Rank & $\alpha$ & $\eta$ & $\kappa$ & $\phi$        & Negative fix   & $\gamma$ & $\Sigma$ \\
+			\hline
+			1    & 7        & 1000   & 1.0      & $\phi_o$      & Original       & 0.805    & 4.272    \\
+			2    & 5        & 1000   & 1.0      & $\phi_\omega$ & Value Shift    & 0.801    & 3.578    \\
+			3    & 5        & 1000   & 1.0      & $\phi_o$      & Adjusted Prob. & 0.801    & 3.671    \\
+			4    & 3        & 1000   & 1.0      & $\phi_\omega$ & Original       & 0.792    & 4.176    \\
+			\hline
+		\end{tabularx}
+	}
 \end{frame}
 
 \begin{frame}{Results RQ1 ($\Sigma$)}
-	\includegraphics[width=\textwidth]{figures/Top-sigma.png}
+	\centering
+	\includegraphics[width=0.65\textwidth]{figures/Top-sigma.png}
+	\footnotesize{   \begin{tabularx}{\textwidth}{ |X|X|X|X|X|l|X|X| }
+			\hline
+			Rank & $\alpha$ & $\eta$ & $\kappa$ & $\phi$        & Negative fix   & $\gamma$ & $\Sigma$ \\
+			\hline
+			1    & 7        & 1000   & 1.0      & $\phi_o$      & Original       & 0.805    & 4.272    \\
+			2    & 3        & 1000   & 1.0      & $\phi_\omega$ & Original       & 0.792    & 4.176    \\
+			3    & 3        & 1000   & 1.0      & $\phi_\omega$ & Adjusted Prob. & 0.792    & 4.176    \\
+			4    & 5        & 1000   & 1.0      & $\phi_o$      & Value Shift    & 0.749    & 4.169    \\
+			\hline
+		\end{tabularx}}
 \end{frame}
 
 \begin{frame}{Where to apply the clustering?}

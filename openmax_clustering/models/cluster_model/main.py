@@ -180,7 +180,7 @@ def condensed(data, n_clusters):
     return condensed_dict
 
 
-def features_clustering(features, num_cluster_pro_class, input_train_clustering=False):
+def apply_features_clustering(features, num_cluster_pro_class, input_train_clustering=False):
     logger.info("Starting features_clustering...")
     cluster_features_dict = {}
     if input_train_clustering:

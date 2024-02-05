@@ -1,7 +1,7 @@
 \section{OpenMax}
 
-\begin{frame}{softmax}
-\centering
+\begin{frame}{SoftMax}
+	\centering
 	\includegraphics[width=\textwidth]{figures/softmax.png}
 \end{frame}
 
@@ -15,18 +15,12 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{OpenMax Overview}
-	\centering
-	\includegraphics[width=\textwidth]{figures/openmax.drawio.png}
-\end{frame}
-
-
 \begin{frame}{Calibrating OpenMax}
 	\begin{itemize}
 		\item Training
 		\item Class representation
 		\item Mean Activation Vector $\mu$
-		\item Features from penultimate layer $\phi$
+		\item Features from penultimate layer $\Gamma$
 		\item Correctly classified samples
 		\item Weibull Distribution
 		\item Tail size $\eta$ \& Distance Multiplier $\kappa$
@@ -42,20 +36,30 @@
 % 	\end{itemize}
 % \end{frame}
 
+\begin{frame}{Projection of MAV}
+	\centering
+	\includegraphics[width=0.75\textwidth]{figures/umap_projection_emnist.png}
+\end{frame}
+
 \begin{frame}{Building a Weibull Distribution}
 	\centering
 	\includegraphics[width=\textwidth]{figures/distances-to-mav.png}
 \end{frame}
 
+\begin{frame}{OpenMax Overview}
+	\centering
+	\includegraphics[width=\textwidth]{figures/openmax.drawio.png}
+\end{frame}
+
+
 \begin{frame}{OpenMax in Detail}
 	For a testing sample:
 	\begin{enumerate}
 		\item Sort and select $\alpha$ classes (logit value)
-		\item Weibull Probability $\omega$ based on distance $\mu_i$ and $\phi$
+		\item Weibull Probability $\omega$ based on distance $\mu_i$ and $\Gamma$
 		\item $\hat{z} = z \circ \omega $
 		\item $\hat{z}_{N+1} = \sum_i z_i (1 - \omega_i)$
 		\item $\operatorname{softmax}(\hat{z})$
 	\end{enumerate}
 \end{frame}
-
 

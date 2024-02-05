@@ -3,8 +3,6 @@ from vast.opensetAlgos.openmax import fit_high
 from torch import Tensor
 import torch.nn as nn
 from openmax_clustering.clustering.agglomerative_clustering import agglo_clustering
-from loguru import logger
-from openmax_clustering.util.util import load_cluster_output
 
 
 def euclidean_pairwisedistance(x: Tensor, y: Tensor) -> Tensor:
@@ -34,18 +32,7 @@ def value_shift(sorted_activations):
     return torch.add(sorted_activations, min_values_reshaped_abs)
 
 
-def condensed(data, n_clusters):
-    condensed_dict = {}
-    for key, tensor in data.items():
-        new_key = key // n_clusters
-        if new_key in condensed_dict:
-            condensed_dict[new_key] = torch.vstack((condensed_dict[new_key], tensor))
-        else:
-            condensed_dict[new_key] = tensor
-    return condensed_dict
-
-
-def val_features_clustering(features, num_cluster_pro_class):
+def features_clustering(features, num_cluster_pro_class):
     cluster_features_dict = {}
     for key in features.keys():
         clusterer = agglo_clustering(
@@ -75,7 +62,7 @@ def max_entry_for_each_cluster(props_dict, n_clusters_per_class):
 def openmax_run(
     tail_sizes: list,
     distance_multpls: list,
-    openmax_training_features_dict: dict,
+    openmax_features_dict: dict,
     openmax_inference_features_dict: dict,
     openmax_alpha_logits_dict: dict,
     alpha: int,
@@ -91,20 +78,16 @@ def openmax_run(
 
     if feature_clustering:
         if precomputed_clusters is None:
-            if input_clustering and trainings_features:
-                openmax_training_features_dict = condensed(
-                    openmax_training_features_dict, n_clusters_per_class_features
-                )
-            openmax_training_features_dict = val_features_clustering(
-                openmax_training_features_dict, n_clusters_per_class_features
+            openmax_features_dict = features_clustering(
+                openmax_features_dict, n_clusters_per_class_features
             )
         else:
-            openmax_training_features_dict = precomputed_clusters
+            openmax_features_dict = precomputed_clusters
 
     models_dict = {}
     for tail in tail_sizes:
         for dist_mult in distance_multpls:
-            model_ = openmax_training(openmax_training_features_dict, dist_mult, tail)
+            model_ = openmax_training(openmax_features_dict, dist_mult, tail)
             key = f"{tail}-{dist_mult}-{n_clusters_per_class_input}-{n_clusters_per_class_features}"
             models_dict[key] = model_
 

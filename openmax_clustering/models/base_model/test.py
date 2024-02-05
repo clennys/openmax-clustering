@@ -4,7 +4,7 @@ from tqdm import tqdm
 from loguru import logger
 
 
-def testing(model, test_data_loader, test_data, path_model="", device=None):
+def test(model, test_data_loader, test_data, path_model="", device=None):
     if os.path.isfile(path_model):
         model.load_state_dict(torch.load(path_model, map_location=device))
         logger.info(f"Loaded: {path_model}")

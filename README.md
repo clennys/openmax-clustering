@@ -24,7 +24,7 @@ Below you can find the possible options for this project.
 *DISCLAIMER*: Be careful by not adding to many options to the lists, otherwise you could run out of memory depending on your maschine. This project is not memory optimized.
 
 ```yaml
-type: base # base, input-cluster, validation-features-cluster, training-features-cluster, input-validation-features-cluster, input-validation-features-cluster
+type: base # base, input-cluster, validation-features-cluster, training-features-cluster, input-validation-features-cluster, input-training-features-cluster
 dataset: EMNIST # EMNIST, CIFAR
 learning_rate: 0.01
 momentum: 0.9
@@ -34,13 +34,13 @@ num_clusters_per_class_input: [2]
 num_clusters_per_class_features: [3]
 alphas: [3] #  -1 removes alpha
 tail_sizes: [10, 100, 250, 500, 750, 1000]
-distance_multipls: [1.0, 1.25, 1.5, 1.7, 2.0, 2.3, 3.0, 4.0]
+distance_multipls: [1.0, 1.25, 1.5, 1.7, 2.0]
 negative_fix: ['VALUE_SHIFT'] # ORIGINAL, VALUE_SHIFT, ADJUSTED_NEGATIVE_VALUE
 normalize_factor: NONE # NONE, WEIGHTS, N-CLASSES
-logger_output: false
-run_model: true
+logger_output: true
+run_model: true # Do training, validation and testing
 post_process: true # Apply OpenMax
-precomputed_clusters: false # Short additional helper script available
+precomputed_clusters: false # Need seperate script to cluster
 log_dir: ./logs/
 saved_models_dir: ./saved_models/pytorch_models/
 saved_network_output_dir: ./saved_models/network_outputs/
